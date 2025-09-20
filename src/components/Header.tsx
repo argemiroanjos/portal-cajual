@@ -12,7 +12,7 @@ export default function Header() {
     >
       {/* Botão Galeria */}
       <div className="absolute left-4 max-[320px]:static max-[320px]:order-2">
-        <Link href="/galeria">
+        <Link href="/gallery">
           <Button>Galeria</Button>
         </Link>
       </div>
