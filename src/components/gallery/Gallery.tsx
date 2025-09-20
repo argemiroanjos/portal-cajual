@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-import Button from "../Button"
 import GalleryTabs from "./GalleryTab"
 import GalleryGrid from "./GalleryGrid"
+import Lightbox from "./Lightbox"
+import Button from "../Button"
+
 import type { Photo } from "./types"
+import { useRouter } from "next/navigation"
 
 type GalleryProps = {
   userPhotos: Photo[]
@@ -16,44 +17,40 @@ type GalleryProps = {
 
 export default function Gallery({ userPhotos, allPhotos, fetchMore }: GalleryProps) {
   const [tab, setTab] = useState<"user" | "all">("user")
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
+  const router = useRouter()
 
-  // seleciona fotos conforme aba
-  const currentPhotos = tab === "user" ? userPhotos : allPhotos
-  const hasMore = false // você pode conectar a paginação depois
-  const loadMore = () => fetchMore?.(tab)
+  const photosToDisplay = tab === "user" ? userPhotos : allPhotos
+
+  const hasMore = false // se você quiser, pode derivar de fetchMore ou do tamanho do array
+
+  const handleLoadMore = async () => {
+    if (!fetchMore) return
+    await fetchMore(tab)
+  }
 
   return (
-    <section className="relative w-full min-h-screen flex flex-col items-center px-4 py-4 max-w-[1024px] mx-auto">
-      {/* Background full screen */}
-      <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat z-0"
-        style={{ backgroundImage: "url('/assets/background.png')" }}
-      />
-      <div className="fixed inset-0 bg-black/30 z-10" /> {/* overlay escuro */}
-
-      {/* Conteúdo da galeria */}
-      <div className="relative z-20 w-full flex flex-col items-center">
-        {/* Botão Voltar fixo e responsivo */}
-        <div className="fixed top-4 left-4 z-30 max-sm:top-2 max-sm:left-2">
-          <Link href="/">
-            <Button className="px-4 py-2 text-sm gap-1">
-              <ArrowLeft className="w-4 h-4" />
-              Voltar
-            </Button>
-          </Link>
-        </div>
-
-        {/* Abas da galeria */}
-        <GalleryTabs tab={tab} setTab={setTab} />
-
-        {/* Grid de fotos */}
-        <GalleryGrid
-          photos={currentPhotos}
-          onPhotoClick={() => {}}
-          hasMore={hasMore}
-          onLoadMore={loadMore}
-        />
+    <section className="relative w-full min-h-screen bg-home-pattern px-4 py-6">
+      {/* Botão Voltar fixo */}
+      <div className="fixed top-6 left-6 z-50">
+        <Button onClick={() => router.push("/")}>Voltar</Button>
       </div>
+
+      {/* Abas */}
+      <GalleryTabs tab={tab} setTab={setTab} />
+
+      {/* Grid de fotos */}
+      <GalleryGrid
+        photos={photosToDisplay}
+        onPhotoClick={setSelectedPhoto}
+        hasMore={hasMore}
+        onLoadMore={handleLoadMore}
+      />
+
+      {/* Lightbox */}
+      {selectedPhoto && (
+        <Lightbox photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
+      )}
     </section>
   )
 }

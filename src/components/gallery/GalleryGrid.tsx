@@ -21,7 +21,7 @@ export default function GalleryGrid({
 }: GalleryGridProps) {
   return (
     <>
-      <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {photos.map((photo) => (
           <GalleryItem
             key={photo.id}
