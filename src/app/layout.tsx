@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Cajual 2025",
   description: "Venha curtir o cajual 2025!",
+  icons: {
+    icon: "/favicon.png",
+  }
 };
 
 export default function RootLayout({
