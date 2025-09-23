@@ -36,7 +36,9 @@ export default function Header() {
         <Link href="/login">
           <Button>Entrar</Button>
         </Link>
-        <Button>Sobre Nós</Button>
+        <Link href="/about-us">
+          <Button>Sobre Nós</Button>
+        </Link>
       </nav>
 
       {/* Botão Hamburger mobile */}
