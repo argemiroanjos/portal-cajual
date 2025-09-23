@@ -4,7 +4,6 @@ import Image from "next/image";
 import type { Photo } from "@/components/gallery/interfaces";
 
 type SizeName = "large" | "medium" | "small";
-type FitMode = "cover" | "contain";
 
 const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number }> = {
   large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
@@ -23,7 +22,6 @@ interface SlideProps {
   opacity: number;
   isCenter: boolean;
   onClick?: () => void;
-  fitMode?: FitMode;
   userName?: string;
   hashtags?: string[];
 }
@@ -39,25 +37,23 @@ export default function Slide({
   opacity,
   isCenter,
   onClick,
-
   userName = "Usuário",
   hashtags = ["#Cajual2025", "#Festival"],
 }: SlideProps) {
   const s = SIZES[size];
 
-  // Espaço no topo do polaroid
   const polaroidTopSpace = size === "large" ? 18 : size === "medium" ? 12 : 8;
 
-  // Altura da faixa inferior (aumentada 30%)
-  const baseBottomPad = size === "large"  ? 36 :  // desktop
-                        size === "medium" ? 32 :  // tablet
-                                            28;   // mobile
-  const bottomPad = Math.round(baseBottomPad * 1.5);
+  // Faixa inferior 30% maior que base
+  const baseBottomPad = size === "large"  ? 36 :
+                        size === "medium" ? 32 :
+                                            28;
+  const bottomPad = Math.round(baseBottomPad * 1.3);
 
   // Altura da caixa de imagem dentro do polaroid
   const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
 
-  const objectFit = "contain"; // aplica para todas as versões, evitando cortes
+  const objectFit: "cover" | "contain" = "contain"; // fixo, evita corte
 
   return (
     <div
@@ -91,6 +87,7 @@ export default function Slide({
         }}
       >
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
+
         <div
           className="relative flex items-center justify-center"
           style={{ height: imgBoxH, paddingLeft: s.lateralPad, paddingRight: s.lateralPad }}
@@ -107,6 +104,8 @@ export default function Slide({
             decoding="sync"
           />
         </div>
+
+        {/* Faixa inferior */}
         <div
           style={{
             height: bottomPad,

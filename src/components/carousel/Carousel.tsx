@@ -240,9 +240,10 @@ export default function Carousel() {
               blur={s.blur}
               opacity={s.opacity}
               isCenter={s.idx === current}
-              fitMode={mode === "mobile" ? "contain-mobile-large" : "cover"}
+              // fitMode removido, agora fixo no Slide.tsx
             />
           ))}
+
         </div>
       </div>
 
