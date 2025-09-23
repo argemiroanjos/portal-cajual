@@ -4,12 +4,12 @@ import Image from "next/image";
 import type { Photo } from "@/components/gallery/interfaces";
 
 type SizeName = "large" | "medium" | "small";
-type FitMode = "cover" | "contain-mobile-large";
+type FitMode = "cover" | "contain";
 
-const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number; bottomPad: number }> = {
-  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14, bottomPad: 32 },
-  medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10, bottomPad: 26 }, // ↑ leve ajuste p/ consistência
-  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8,  bottomPad: 20 }, // ↑ leve ajuste p/ consistência
+const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number }> = {
+  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
+  medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10 },
+  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8 },
 };
 
 interface SlideProps {
@@ -23,7 +23,9 @@ interface SlideProps {
   opacity: number;
   isCenter: boolean;
   onClick?: () => void;
-  fitMode?: FitMode; // mobile: "contain-mobile-large", tablet/desktop: "cover"
+  fitMode?: FitMode;
+  userName?: string;
+  hashtags?: string[];
 }
 
 export default function Slide({
@@ -37,29 +39,25 @@ export default function Slide({
   opacity,
   isCenter,
   onClick,
-  fitMode = "cover",
+
+  userName = "Usuário",
+  hashtags = ["#Cajual2025", "#Festival"],
 }: SlideProps) {
   const s = SIZES[size];
 
-  // Espaço no topo do polaroid (acima da imagem):
-  // - Garante espaço para sombra da borda arredondada
-  // - Evita que a imagem fique muito próxima da borda superior
-  // - Varia conforme o tamanho do slide
+  // Espaço no topo do polaroid
   const polaroidTopSpace = size === "large" ? 18 : size === "medium" ? 12 : 8;
 
-  // Altura da caixa da imagem (dentro do polaroid):
-  // - "contain-mobile-large": aumenta a altura da caixa no mobile para melhorar a visibilidade da imagem
-  // - Garante que a imagem não ultrapasse os limites do polaroid
-  // - Garante um aumento perceptível no mobile
-  const imgBoxH =
-    fitMode === "contain-mobile-large"
-      ? Math.min(
-          s.outerH - polaroidTopSpace - s.bottomPad - 8, // margem extra para evitar overflow
-          s.imgH + 36                                   // aumento perceptível no mobile
-        )
-      : s.imgH;
+  // Altura da faixa inferior (aumentada 30%)
+  const baseBottomPad = size === "large"  ? 36 :  // desktop
+                        size === "medium" ? 32 :  // tablet
+                                            28;   // mobile
+  const bottomPad = Math.round(baseBottomPad * 1.5);
 
-  const objectFit = fitMode === "contain-mobile-large" ? "contain" : "cover";
+  // Altura da caixa de imagem dentro do polaroid
+  const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
+
+  const objectFit = "contain"; // aplica para todas as versões, evitando cortes
 
   return (
     <div
@@ -111,14 +109,21 @@ export default function Slide({
         </div>
         <div
           style={{
-            height: s.bottomPad,
+            height: bottomPad,
             background: "#fff",
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
+            padding: "0 4px",
           }}
         >
-          <span className="text-sm font-semibold text-slate-900">#Cajual2025</span>
+          <span className="text-sm font-semibold text-slate-900">{userName}</span>
+          <div className="flex gap-2">
+            {hashtags.map((tag, idx) => (
+              <span key={idx} className="text-xs font-medium text-slate-600">{tag}</span>
+            ))}
+          </div>
         </div>
       </div>
     </div>
