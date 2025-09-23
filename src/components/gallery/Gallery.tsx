@@ -17,12 +17,11 @@ type GalleryProps = {
 
 export default function Gallery({ userPhotos, allPhotos, fetchMore }: GalleryProps) {
   const [tab, setTab] = useState<"user" | "all">("user")
-  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const router = useRouter()
 
   const photosToDisplay = tab === "user" ? userPhotos : allPhotos
-
-  const hasMore = false // Placeholder: Implement logic to determine if more photos can be loaded
+  const hasMore = false // Placeholder: Implement logic to determine if mais fotos podem ser carregadas
 
   const handleLoadMore = async () => {
     if (!fetchMore) return
@@ -30,7 +29,13 @@ export default function Gallery({ userPhotos, allPhotos, fetchMore }: GalleryPro
   }
 
   return (
-    <section className="relative w-full min-h-screen bg-home-pattern px-4 py-6">
+    <main
+      className="relative w-full min-h-screen px-4 py-6 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: "url('/assets/background.png')",
+        backgroundAttachment: "scroll",
+      }}
+    >
       {/* Botão Voltar fixo */}
       <div className="fixed top-6 left-6 z-50">
         <Button onClick={() => router.push("/")}>Voltar</Button>
@@ -42,15 +47,21 @@ export default function Gallery({ userPhotos, allPhotos, fetchMore }: GalleryPro
       {/* Grid de fotos */}
       <GalleryGrid
         photos={photosToDisplay}
-        onPhotoClick={setSelectedPhoto}
+        onPhotoClick={(photo) =>
+          setSelectedIndex(photosToDisplay.findIndex((p) => p.id === photo.id))
+        }
         hasMore={hasMore}
         onLoadMore={handleLoadMore}
       />
 
       {/* Lightbox */}
-      {selectedPhoto && (
-        <Lightbox photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />
+      {selectedIndex !== null && (
+        <Lightbox
+          photos={photosToDisplay}
+          startIndex={selectedIndex}
+          onClose={() => setSelectedIndex(null)}
+        />
       )}
-    </section>
+    </main>
   )
 }
