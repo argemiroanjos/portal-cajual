@@ -4,11 +4,12 @@ import Image from "next/image";
 import type { Photo } from "@/components/gallery/interfaces";
 
 type SizeName = "large" | "medium" | "small";
+type FitMode = "cover" | "contain-mobile-large";
 
-const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number }> = {
-  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
-  medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10 },
-  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8 },
+const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number; bottomPad: number }> = {
+  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14, bottomPad: 32 },
+  medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10, bottomPad: 26 },
+  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8,  bottomPad: 20 },
 };
 
 interface SlideProps {
@@ -22,8 +23,7 @@ interface SlideProps {
   opacity: number;
   isCenter: boolean;
   onClick?: () => void;
-  userName?: string;
-  hashtags?: string[];
+  fitMode?: FitMode;
 }
 
 export default function Slide({
@@ -37,23 +37,20 @@ export default function Slide({
   opacity,
   isCenter,
   onClick,
-  userName = "Usuário",
-  hashtags = ["#Cajual2025", "#Festival"],
+  fitMode = "cover",
 }: SlideProps) {
   const s = SIZES[size];
 
   const polaroidTopSpace = size === "large" ? 18 : size === "medium" ? 12 : 8;
+  const imgBoxH =
+    fitMode === "contain-mobile-large"
+      ? Math.min(
+          s.outerH - polaroidTopSpace - s.bottomPad - 8,
+          s.imgH + 36
+        )
+      : s.imgH;
 
-  // Faixa inferior 30% maior que base
-  const baseBottomPad = size === "large"  ? 36 :
-                        size === "medium" ? 32 :
-                                            28;
-  const bottomPad = Math.round(baseBottomPad * 1.3);
-
-  // Altura da caixa de imagem dentro do polaroid
-  const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
-
-  const objectFit: "cover" | "contain" = "contain"; // fixo, evita corte
+  const objectFit = fitMode === "contain-mobile-large" ? "contain" : "cover";
 
   return (
     <div
@@ -69,27 +66,22 @@ export default function Slide({
         zIndex: z,
         opacity,
         filter: blur ? `blur(${blur}px)` : "none",
-        borderRadius: 14,
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-        background: "#fff",
       }}
       onClick={onClick}
     >
       <div
-        className="bg-white rounded-lg shadow-lg border-4 border-white overflow-hidden flex flex-col h-full w-full"
-        style={{
-          boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-          borderColor: "#F6C85F",
-          borderWidth: 6,
-          borderStyle: "solid",
-        }}
+        className={`
+          bg-slate-50 rounded-lg overflow-hidden flex flex-col h-full w-full
+          border-4 border-[#001f54]
+          shadow-[-8px_8px_0px_0px_#001f54]
+          transform transition-transform
+          hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54]
+          -rotate-1
+        `}
       >
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
-
         <div
-          className="relative flex items-center justify-center"
+          className="relative flex items-center justify-center bg-white"
           style={{ height: imgBoxH, paddingLeft: s.lateralPad, paddingRight: s.lateralPad }}
         >
           <Image
@@ -104,25 +96,16 @@ export default function Slide({
             decoding="sync"
           />
         </div>
-
-        {/* Faixa inferior */}
         <div
           style={{
-            height: bottomPad,
+            height: s.bottomPad,
             background: "#fff",
             display: "flex",
-            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
-            padding: "0 4px",
           }}
         >
-          <span className="text-sm font-semibold text-slate-900">{userName}</span>
-          <div className="flex gap-2">
-            {hashtags.map((tag, idx) => (
-              <span key={idx} className="text-xs font-medium text-slate-600">{tag}</span>
-            ))}
-          </div>
+          <span className="text-sm font-semibold text-slate-900">#Cajual2025</span>
         </div>
       </div>
     </div>
