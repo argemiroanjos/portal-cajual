@@ -76,7 +76,7 @@ export default function RegistroPage() {
     >
       <Header />
 
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg mt-8">
+      <div className="w-full max-w-md bg-slate-50 p-8 rounded-2xl mt-8 border-4 border-[#001f54] shadow-[-8px_8px_0px_0px_#001f54] transform transition-transform hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54] -rotate-1">
         <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
           Crie sua Conta
         </h1>
