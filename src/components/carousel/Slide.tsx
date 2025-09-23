@@ -69,6 +69,7 @@ export default function Slide({
       }}
       onClick={onClick}
     >
+      {/* 🔹 Estilização da borda com sombra e rotação */}
       <div
         className={`
           bg-slate-50 rounded-lg overflow-hidden flex flex-col h-full w-full
@@ -78,9 +79,21 @@ export default function Slide({
           hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54]
           -rotate-1
         `}
+        className={`
+          bg-slate-50 rounded-lg overflow-hidden flex flex-col h-full w-full
+          border-4 border-[#001f54]
+          shadow-[-8px_8px_0px_0px_#001f54]
+          transform transition-transform
+          hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54]
+          -rotate-1
+        `}
       >
+        {/* Espaço superior */}
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
+
+        {/* Imagem */}
         <div
+          className="relative flex items-center justify-center bg-white"
           className="relative flex items-center justify-center bg-white"
           style={{ height: imgBoxH, paddingLeft: s.lateralPad, paddingRight: s.lateralPad }}
         >
@@ -96,6 +109,8 @@ export default function Slide({
             decoding="sync"
           />
         </div>
+
+        {/* Faixa inferior com usuário e hashtags */}
         <div
           style={{
             height: s.bottomPad,
