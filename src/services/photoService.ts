@@ -1,4 +1,4 @@
-import type { Photo } from "@/components/gallery/types"
+import type { Photo } from "@/components/gallery/interfaces"
 
 const mockUserPhotos: Photo[] = [
   { id: "u1", src: "/photos/photo1.png" },

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { Photo } from "./types";
+import type { Photo } from "./interfaces";
 import GalleryItem from "./GalleryItem";
 
 type GalleryGridProps = {

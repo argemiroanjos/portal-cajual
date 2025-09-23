@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { forwardRef } from "react";
-import type { Photo } from "./types";
+import type { Photo } from "./interfaces";
 
 type GalleryItemProps = {
   photo: Photo;

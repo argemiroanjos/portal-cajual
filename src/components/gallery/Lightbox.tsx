@@ -3,7 +3,7 @@
 import React from "react"
 import { X } from "lucide-react"
 import Image from "next/image"
-import type { Photo } from "./types"
+import type { Photo } from "./interfaces"
 
 type LightboxProps = {
   photo: Photo

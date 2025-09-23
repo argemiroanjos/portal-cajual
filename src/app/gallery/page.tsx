@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Gallery from "@/components/gallery/Gallery"
-import type { Photo } from "@/components/gallery/types"
+import type { Photo } from "@/components/gallery/interfaces"
 import { photoService } from "@/services/photoService"
 
 export default function Page() {

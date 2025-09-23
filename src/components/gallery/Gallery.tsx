@@ -6,7 +6,7 @@ import GalleryGrid from "./GalleryGrid"
 import Lightbox from "./Lightbox"
 import Button from "../Button"
 
-import type { Photo } from "./types"
+import type { Photo } from "./interfaces"
 import { useRouter } from "next/navigation"
 
 type GalleryProps = {
@@ -22,7 +22,7 @@ export default function Gallery({ userPhotos, allPhotos, fetchMore }: GalleryPro
 
   const photosToDisplay = tab === "user" ? userPhotos : allPhotos
 
-  const hasMore = false // se você quiser, pode derivar de fetchMore ou do tamanho do array
+  const hasMore = false // Placeholder: Implement logic to determine if more photos can be loaded
 
   const handleLoadMore = async () => {
     if (!fetchMore) return

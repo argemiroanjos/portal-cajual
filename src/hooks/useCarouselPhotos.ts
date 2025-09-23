@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { photoService } from "@/services/photoService"
-import type { Photo } from "@/components/gallery/types"
+import type { Photo } from "@/components/gallery/interfaces"
 
 export function useCarouselPhotos() {
   const [photos, setPhotos] = useState<Photo[]>([])

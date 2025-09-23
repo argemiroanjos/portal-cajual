@@ -1,4 +1,4 @@
-export type Photo = {
+export interface Photo {
   id: string
   src: string
   width?: number

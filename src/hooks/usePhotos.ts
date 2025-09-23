@@ -1,4 +1,3 @@
-// src/hooks/usePhotos.ts
 import { useState, useEffect } from "react"
 
 export type Photo = {
@@ -13,7 +12,7 @@ export function useCarouselPhotos() {
   const [photos, setPhotos] = useState<Photo[]>([])
 
   useEffect(() => {
-    // simulação local
+    // Simulate fetching photos from an API or local source
     setPhotos([
       { id: "1", src: "/photos/photo1.png" },
       { id: "2", src: "/photos/photo2.png" },
