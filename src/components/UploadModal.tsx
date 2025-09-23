@@ -1,153 +1,165 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
-import { X, UploadCloud } from "lucide-react";
+import { X, UploadCloud, Image as ImageIcon, CornerUpLeft } from "lucide-react";
+import toast from "react-hot-toast";
+import api from "@/lib/api";
 import Button from "@/components/Button";
+import Image from "next/image";
 
 type UploadModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSelectFile?: (file: File) => void;
+  onUploadSuccess?: () => void;
 };
 
 export const UploadModal: React.FC<UploadModalProps> = (props) => {
-  const { isOpen, onClose, onSelectFile } = props;
+  const { isOpen, onClose, onUploadSuccess } = props;
+  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [hashtags, setHashtags] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClose = React.useCallback(() => {
+  const handleClose = useCallback(() => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setHashtags("");
+    setIsLoading(false);
     onClose();
   }, [onClose]);
 
-  // Bloqueia scroll do body quando o modal está aberto
-  React.useEffect(() => {
-    if (!isOpen) return;
-    document.body.classList.add("modal-open");
-    return () => document.body.classList.remove("modal-open");
-  }, [isOpen]);
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setPreviewUrl(objectUrl);
 
-  // Fecha o modal ao pressionar Esc
-  React.useEffect(() => {
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedFile]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!selectedFile) {
+      toast.error("Por favor, selecione uma foto primeiro.");
+      return;
+    }
+
+    setIsLoading(true);
+    const loadingToastId = toast.loading("Enviando sua foto...");
+
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('hashtags', JSON.stringify(hashtags.split(',').map(h => h.trim())));
+
+    try {
+      await api.post("/", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      toast.dismiss(loadingToastId);
+      toast.success("Foto publicada com sucesso!");
+      
+      onUploadSuccess?.();
+      handleClose();
+
+    } catch (err: any) {
+      toast.dismiss(loadingToastId);
+      const errorMessage = err.response?.data?.message || "Falha ao publicar a foto.";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (!isOpen) return;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "auto";
+      window.removeEventListener("keydown", onKey);
+    };
   }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 flex items-center justify-center"
-      style={{ zIndex: "var(--z-modal, 2000)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
     >
-      {/* Fundo com gradiente e blur, fecha ao clicar */}
-      <button
-        aria-label="Fechar modal"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,80,168,.28),rgba(246,200,95,.18))] backdrop-blur-md"
+      <div
+        className="absolute inset-0 bg-blue-900/30 backdrop-blur-sm"
         onClick={handleClose}
       />
 
-      {/* Modal centralizado */}
       <div
-        className="
-          relative z-[1] w-[92vw] max-w-[640px] rounded-3xl overflow-hidden
-          bg-white/92 border-2 border-[#001f54]
-          shadow-[0_12px_28px_rgba(0,0,0,.28),0_2px_0_rgba(255,255,255,.45)_inset]
-        "
+        className="relative z-10 w-full max-w-lg bg-slate-50 p-6 sm:p-8 rounded-2xl border-4 border-[#001f54] shadow-[-8px_8px_0px_0px_#001f54] transform -rotate-1"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Cabeçalho com gradiente e botão de fechar */}
-        <div className="h-12 bg-[linear-gradient(90deg,var(--brand-blue),#3a79d8)] relative">
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(120px_60px_at_15%_10%,rgba(255,255,255,.25),transparent_60%),radial-gradient(140px_70px_at_85%_0%,rgba(255,255,255,.2),transparent_60%)]" />
-          <h2 className="h-full flex items-center justify-center text-white font-extrabold tracking-wide">
-            Publicar Foto
-          </h2>
-          <button
-            onClick={handleClose}
-            aria-label="Fechar"
-            className="absolute top-2 right-2 rounded-full bg-white/20 hover:bg-white/30 text-white p-2 transition"
-          >
-            <X size={18} />
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-blue-800">Publicar Foto</h2>
+          <button onClick={handleClose} aria-label="Fechar" className="text-gray-500 hover:text-red-500 transition">
+            <X size={24} />
           </button>
         </div>
-
-        {/* Conteúdo do modal */}
-        <div className="p-5 sm:p-6">
-          {/* Dropzone com foco/hover seguindo a identidade */}
+        
+        {!selectedFile ? (
           <label
             htmlFor="fileInput"
-            className="
-              group block cursor-pointer rounded-2xl border-2 border-dashed
-              border-[color:var(--brand-blue)]/35 hover:border-[color:var(--brand-yellow)]
-              p-6 transition bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.7)]
-              focus-within:ring-2 focus-within:ring-[#001f54] focus-within:ring-offset-2 focus-within:ring-offset-white
-            "
+            className="group flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed border-blue-300 hover:border-yellow-400 p-8 transition bg-white/80 text-center"
           >
-            <div className="flex flex-col items-center gap-2 text-center">
-              <div className="rounded-full bg-[color:var(--brand-yellow)] text-white p-3 shadow-[0_6px_16px_rgba(246,200,95,.55)] group-hover:scale-105 transition">
-                <UploadCloud size={22} />
+            <UploadCloud className="w-12 h-12 text-blue-500 group-hover:text-yellow-500 transition-colors" />
+            <p className="mt-2 font-semibold text-gray-700">Clique para selecionar uma foto</p>
+            <p className="text-sm text-gray-500">Ou arraste e solte o arquivo aqui</p>
+            <input id="fileInput" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+          </label>
+        ) : (
+          <div className="space-y-4">
+            {previewUrl && (
+              <div className="relative w-full h-64 rounded-lg overflow-hidden border-2 border-gray-200">
+                <Image src={previewUrl} alt="Pré-visualização da imagem" layout="fill" objectFit="contain" />
               </div>
-              <p className="text-slate-800 font-medium">Arraste sua foto aqui ou clique para selecionar</p>
-              <span className="text-[13px] text-slate-500">PNG, JPG até 10MB</span>
-
-              {/* Botão estilizado para abrir o seletor de arquivos */}
-              <Button
-                aria-label="Escolher arquivo"
-                className="mt-2 px-5 py-2 text-base"
-                onClick={() => {
-                  const el = document.getElementById("fileInput") as HTMLInputElement | null;
-                  el?.click();
-                }}
-              >
-                Escolher arquivo
-              </Button>
+            )}
+            <div>
+              <label className="block text-gray-700 font-medium mb-1" htmlFor="hashtags">
+                Hashtags (separadas por vírgula)
+              </label>
+              <input
+                id="hashtags"
+                type="text"
+                value={hashtags}
+                onChange={(e) => setHashtags(e.target.value)}
+                placeholder="#cajual2025, #terrasanta"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
             </div>
 
-            <input
-              id="fileInput"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file && onSelectFile) onSelectFile(file);
-              }}
-            />
-          </label>
-
-          {/* Ações */}
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            {/* Cancelar: botão customizado com gradiente laranja/âmbar */}
-            <Button
-              aria-label="Cancelar publicação"
-              onClick={handleClose}
-              className="
-                text-[#082142]
-                bg-[linear-gradient(180deg,var(--cancel-amber-500),var(--cancel-amber-600))]
-                border-2 border-[#001f54]
-                shadow-[0_4px_0_0_#001f54,0_8px_14px_rgba(217,119,6,.35)]
-                hover:brightness-105
-                focus-visible:outline //focus-visible:outline-2
-                focus-visible:outline-[color:var(--cancel-amber-600)]
-                focus-visible:outline-offset-2
-              "
-            >
-              Cancelar
-            </Button>
-
-            {/* Publicar: botão padrão */}
-            <Button
-              aria-label="Publicar foto"
-              onClick={handleClose}
-            >
-              Publicar
-            </Button>
+            <div className="flex justify-between items-center gap-4">
+               <Button onClick={() => setSelectedFile(null)} className="bg-gray-200 text-gray-800 px-4 py-2 text-sm hover:bg-gray-300">
+                <CornerUpLeft className="w-4 h-4 mr-2" />
+                Trocar Foto
+              </Button>
+              <Button onClick={handlePublish} disabled={isLoading} className="bg-blue-600 text-white px-6 py-2">
+                {isLoading ? "Publicando..." : "Publicar"}
+              </Button>
+            </div>
           </div>
-        </div>
-
-        {/* Barra inferior amarela */}
-        <div className="h-2 bg-[color:var(--brand-yellow)]" />
+        )}
       </div>
     </div>,
     document.body

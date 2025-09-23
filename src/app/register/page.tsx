@@ -6,8 +6,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Button from "@/components/Button";
 import toast from "react-hot-toast";
-
-const API_URL = "https://cajual-app.azurewebsites.net";
+import api from "@/lib/api";
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -23,35 +22,26 @@ export default function RegistroPage() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error("As senhas не coincidem.");
+      toast.error("As senhas não coincidem.");
       return;
     }
-
     if (password.length < 6) {
       toast.error("A senha deve ter no mínimo 6 caracteres.");
       return;
     }
     
     setIsLoading(true);
-    const loadingToastId = toast.loading("Registrando sua conta...");
+    const loadingToastId = toast.loading("Criando sua conta...");
 
     try {
-      const response = await fetch(`${API_URL}/api/users/registro`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, lastName, email, password }),
+      await api.post("/usuario/registro", {
+        name,
+        lastName,
+        email,
+        password,
       });
 
-      const data = await response.json();
       toast.dismiss(loadingToastId);
-
-      if (!response.ok) {
-        const errorMessage = data.errors ? data.errors.join(", ") : (data.message || "Falha ao registrar.");
-        throw new Error(errorMessage);
-      }
-
       toast.success("Cadastro realizado com sucesso!");
       
       setTimeout(() => {
@@ -60,7 +50,8 @@ export default function RegistroPage() {
 
     } catch (err: any) {
       toast.dismiss(loadingToastId);
-      toast.error(err.message);
+      const errorMessage = err.response?.data?.message || err.response?.data?.errors?.join(", ") || "Falha ao registrar.";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -75,89 +66,37 @@ export default function RegistroPage() {
       }}
     >
       <Header />
-
       <div className="w-full max-w-md bg-slate-50 p-8 rounded-2xl mt-8 border-4 border-[#001f54] shadow-[-8px_8px_0px_0px_#001f54] transform transition-transform hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54] -rotate-1">
         <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
           Crie sua Conta
         </h1>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="w-full sm:w-1/2">
-              <label className="block text-gray-700 font-medium mb-1" htmlFor="name">
-                Nome
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              />
+              <label className="block text-gray-700 font-medium mb-1" htmlFor="name">Nome</label>
+              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"/>
             </div>
             <div className="w-full sm:w-1/2">
-              <label className="block text-gray-700 font-medium mb-1" htmlFor="lastName">
-                Sobrenome
-              </label>
-              <input
-                id="lastName"
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              />
+              <label className="block text-gray-700 font-medium mb-1" htmlFor="lastName">Sobrenome</label>
+              <input id="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"/>
             </div>
           </div>
-
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="email">
-              E-mail
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
+            <label className="block text-gray-700 font-medium mb-1" htmlFor="email">E-mail</label>
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"/>
           </div>
-
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="password">
-              Senha
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
+            <label className="block text-gray-700 font-medium mb-1" htmlFor="password">Senha</label>
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"/>
           </div>
-          
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="confirmPassword">
-              Confirmar Senha
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
+            <label className="block text-gray-700 font-medium mb-1" htmlFor="confirmPassword">Confirmar Senha</label>
+            <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"/>
           </div>
-          
           <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300">
             {isLoading ? "Registrando..." : "Registrar"}
           </Button>
         </form>
-
         <p className="text-center text-gray-600 mt-4">
           Já tem uma conta?{" "}
           <Link href="/entrar" className="text-blue-600 hover:underline font-semibold">
