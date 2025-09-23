@@ -30,6 +30,9 @@ export default function Header() {
         <Link href="/gallery">
           <Button>Galeria</Button>
         </Link>
+        <Link href="/register">
+          <Button>Cadastrar</Button>
+        </Link>
         <Link href="/login">
           <Button>Entrar</Button>
         </Link>
