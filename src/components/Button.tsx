@@ -1,17 +1,13 @@
 import React from "react";
 
-interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  className?: string;
-  "aria-label"?: string;
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
-export default function Button({ children, onClick, className, ...rest }: ButtonProps) {
+
+export default function Button({ children, className, ...props }: ButtonProps) {
   return (
     <button
-      onClick={onClick}
-      {...rest}
+      {...props}
       className={`
         flex items-center justify-center gap-2
         px-6 py-2
