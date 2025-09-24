@@ -1,27 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Button from "./Button";
 import HamburgerMenuButton from "./HamburgerMenuButton";
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+    setIsMenuOpen((prev) => !prev);
     if (!isMenuOpen) document.body.classList.add("menu-open");
     else document.body.classList.remove("menu-open");
   };
 
-  // IMPORTANTE: header no fluxo (position: static/relative), sem z-index elevado
+  // Fecha o menu ao clicar fora do botão ou do dropdown
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (
+        isMenuOpen &&
+        !buttonRef.current?.contains(target) &&
+        !menuRef.current?.contains(target)
+      ) {
+        setIsMenuOpen(false);
+        document.body.classList.remove("menu-open");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   return (
     <header className="relative left-0 w-full flex items-center justify-between p-4 bg-transparent">
-      {/* Logo à esquerda */}
+      {/* Logo */}
       <div className="flex items-center">
         <Link href="/">
-          <Image src="/assets/logoCajual.png" alt="Festival Cajual" height={40} width={120} />
+          <Image
+            src="/assets/logoCajual.png"
+            alt="Festival Cajual"
+            height={40}
+            width={120}
+          />
         </Link>
       </div>
 
@@ -43,10 +72,16 @@ export default function Header() {
 
       {/* Botão Hamburger mobile */}
       <div className="md:hidden relative">
-        <HamburgerMenuButton isOpen={isMenuOpen} onClick={toggleMenu} />
+        <HamburgerMenuButton
+          isOpen={isMenuOpen}
+          onClick={toggleMenu}
+          buttonRef={buttonRef}
+        />
+
         {/* Dropdown mobile */}
         {isMenuOpen && (
           <div
+            ref={menuRef}
             className="
               absolute top-full right-0 mt-2
               bg-white/90 backdrop-blur-md
@@ -56,22 +91,34 @@ export default function Header() {
             "
           >
             <Link href="/gallery">
-              <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
+              <Button
+                onClick={toggleMenu}
+                className="w-36 py-2 text-base text-center whitespace-nowrap"
+              >
                 Galeria
               </Button>
             </Link>
             <Link href="/register">
-              <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
+              <Button
+                onClick={toggleMenu}
+                className="w-36 py-2 text-base text-center whitespace-nowrap"
+              >
                 Cadastrar
               </Button>
             </Link>
             <Link href="/login">
-              <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
+              <Button
+                onClick={toggleMenu}
+                className="w-36 py-2 text-base text-center whitespace-nowrap"
+              >
                 Entrar
               </Button>
             </Link>
             <Link href="/about-us">
-              <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
+              <Button
+                onClick={toggleMenu}
+                className="w-36 py-2 text-base text-center whitespace-nowrap"
+              >
                 Sobre Nós
               </Button>
             </Link>
