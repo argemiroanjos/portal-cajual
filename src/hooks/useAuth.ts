@@ -4,12 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 
+interface SocialMediaLink {
+  platform: string;
+  username: string;
+  isPrincipal?: boolean;
+}
+
 interface User {
   _id: string;
   name: string;
   lastName: string;
   email: string;
   role: "user" | "admin";
+  socialMedia?: SocialMediaLink[];
 }
 
 export function useAuth() {
@@ -25,9 +32,6 @@ export function useAuth() {
         setUser(null);
       } else {
         console.error("Erro inesperado ao verificar autenticação:", error);
-        toast.error(
-          "Não foi possível verificar sua sessão. Verifique sua conexão."
-        );
       }
     } finally {
       setIsLoading(false);
