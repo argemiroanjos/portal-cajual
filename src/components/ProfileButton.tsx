@@ -13,7 +13,7 @@ export default function ProfileButton() {
 
   return (
     <Link 
-      href="/profile" 
+      href="/perfil" 
       aria-label="Acessar perfil de usuário"
       className="
         fixed bottom-6 right-6 z-40

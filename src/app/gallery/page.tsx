@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Photo } from "@/components/gallery/interfaces";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ import GalleryCard from "@/components/gallery/GalleryCard";
 import Button from "@/components/Button";
 import { UploadModal } from "@/components/UploadModal";
 import EmptyGallery from "@/components/gallery/EmptyGallery";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function GalleryPage() {
   const [activeTab, setActiveTab] = useState<"all" | "user">("all");
   const [isLoadingPhotos, setIsLoadingPhotos] = useState(true);
   const [isUploadModalOpen, setUploadModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
 
   const [userPhotos, setUserPhotos] = useState<Photo[]>([]);
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
@@ -37,7 +40,7 @@ export default function GalleryPage() {
     }));
   };
 
-  const fetchInitialPhotos = async () => {
+  const fetchInitialPhotos = useCallback(async () => {
     if (!user) return;
     setIsLoadingPhotos(true);
     try {
@@ -54,7 +57,7 @@ export default function GalleryPage() {
     } finally {
       setIsLoadingPhotos(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -62,10 +65,10 @@ export default function GalleryPage() {
         fetchInitialPhotos();
       } else {
         toast.error("Você precisa estar logado para ver a galeria.");
-        router.push('/entrar');
+        router.push('/login');
       }
     }
-  }, [user, isAuthLoading, router]);
+  }, [user, isAuthLoading, router, fetchInitialPhotos]);
 
   const fetchMore = async () => {
     const isUserTab = activeTab === "user";
@@ -101,22 +104,30 @@ export default function GalleryPage() {
     }
   };
 
-  const handleDeletePhoto = async (photoId: string) => {
-    if (window.confirm("Tem certeza que deseja apagar esta foto?")) {
-      const loadingToastId = toast.loading("Apagando foto...");
-      try {
-        await api.delete(`/fotos/${photoId}`);
-        setUserPhotos(prev => prev.filter(p => p.id !== photoId));
-        setAllPhotos(prev => prev.filter(p => p.id !== photoId));
-        toast.dismiss(loadingToastId);
-        toast.success("Foto apagada com sucesso!");
-      } catch (error) {
-        toast.dismiss(loadingToastId);
-        toast.error("Não foi possível apagar a foto.");
-      }
+  const handleDeletePhoto = async () => {
+    if (!photoToDelete) return;
+
+    setIsConfirmModalOpen(false);
+    const loadingToastId = toast.loading("Apagando foto...");
+    try {
+      await api.delete(`/fotos/${photoToDelete}`);
+      setUserPhotos(prev => prev.filter(p => p.id !== photoToDelete));
+      setAllPhotos(prev => prev.filter(p => p.id !== photoToDelete));
+      toast.dismiss(loadingToastId);
+      toast.success("Foto apagada com sucesso!");
+    } catch (error) {
+      toast.dismiss(loadingToastId);
+      toast.error("Não foi possível apagar a foto.");
+    } finally {
+      setPhotoToDelete(null);
     }
   };
 
+  const openDeleteConfirm = (photoId: string) => {
+    setPhotoToDelete(photoId);
+    setIsConfirmModalOpen(true);
+  };
+  
   if (isAuthLoading || !user) {
     return (
       <main className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/assets/background.png')"}}>
@@ -150,10 +161,10 @@ export default function GalleryPage() {
           </section>
 
           <div className="flex justify-center gap-2 sm:gap-4 mb-8">
-            <Button onClick={() => setActiveTab('all')} className={`w-40 sm:w-48 ${activeTab === 'all' ? 'bg-yellow-400' : 'bg-white/70 text-blue-800'}`}>
+            <Button onClick={() => setActiveTab('all')} className={`w-40 sm:w-48 transition-all duration-300 ${activeTab === 'all' ? 'bg-yellow-400 text-[#001f54] shadow-[-4px_4px_0px_0px_#001f54]' : 'bg-white/50 text-blue-800 opacity-70 hover:opacity-100'}`}>
               Galeria Geral
             </Button>
-            <Button onClick={() => setActiveTab('user')} className={`w-40 sm:w-48 ${activeTab === 'user' ? 'bg-yellow-400' : 'bg-white/70 text-blue-800'}`}>
+            <Button onClick={() => setActiveTab('user')} className={`w-40 sm:w-48 transition-all duration-300 ${activeTab === 'user' ? 'bg-yellow-400 text-[#001f54] shadow-[-4px_4px_0px_0px_#001f54]' : 'bg-white/50 text-blue-800 opacity-70 hover:opacity-100'}`}>
               Minhas Fotos
             </Button>
           </div>
@@ -162,14 +173,20 @@ export default function GalleryPage() {
             <div className="text-center text-white text-shadow-dark font-semibold text-lg">Carregando fotos...</div>
           ) : photosToShow.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {photosToShow.map(photo => (
-                <GalleryCard
-                  key={photo.id}
-                  photo={photo}
-                  onDelete={handleDeletePhoto}
-                  isOwner={user?._id === (photo.user as any)?._id || user?.role === 'admin'}
-                />
-              ))}
+              {photosToShow.map(photo => {
+                const isAdmin = user?.role === 'admin';
+                const isOwnerInUserTab = activeTab === 'user';
+                const canDelete = isAdmin || isOwnerInUserTab;
+
+                return (
+                  <GalleryCard
+                    key={photo.id}
+                    photo={photo}
+                    onDelete={openDeleteConfirm}
+                    isOwner={canDelete}
+                  />
+                );
+              })}
             </div>
           ) : (
             <EmptyGallery activeTab={activeTab} onUploadClick={() => setUploadModalOpen(true)} />
@@ -189,6 +206,13 @@ export default function GalleryPage() {
         isOpen={isUploadModalOpen} 
         onClose={() => setUploadModalOpen(false)}
         onUploadSuccess={fetchInitialPhotos}
+      />
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleDeletePhoto}
+        title="Confirmar Exclusão"
+        message="Esta ação é permanente. Você tem certeza que deseja apagar esta foto?"
       />
     </>
   )

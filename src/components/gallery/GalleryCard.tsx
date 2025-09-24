@@ -82,7 +82,7 @@ export default function GalleryCard({ photo, onDelete, isOwner }: GalleryCardPro
           {isOwner && (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
-              className="absolute top-1 right-1 p-1 bg-yellow-400 text-[#001f54] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-2 right-2 p-1.5 bg-yellow-400 text-[#001f54] rounded-full transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100"
               aria-label="Apagar foto"
             >
               <X size={16} />
