@@ -24,7 +24,7 @@ export default function GalleryCard({ photo, onDelete, isOwner }: GalleryCardPro
   if (!photo || !photo.src) {
     return null;
   }
-
+  
   const mainSocial = photo.user?.socialMedia?.find(s => s.isPrincipal) || photo.user?.socialMedia?.[0];
   const hasHashtags = photo.hashtags && photo.hashtags.length > 0 && photo.hashtags[0] !== "";
 
@@ -82,10 +82,10 @@ export default function GalleryCard({ photo, onDelete, isOwner }: GalleryCardPro
           {isOwner && (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
-              className="absolute top-1 right-1 p-2 bg-red-600/70 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1 right-1 p-1 bg-yellow-400 text-[#001f54] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               aria-label="Apagar foto"
             >
-              <Trash2 size={16} />
+              <X size={16} />
             </button>
           )}
         </div>

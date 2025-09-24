@@ -44,16 +44,14 @@ export default function Slide({
 
   const polaroidTopSpace = size === "large" ? 18 : size === "medium" ? 12 : 8;
 
-  // Faixa inferior 30% maior que base
   const baseBottomPad = size === "large"  ? 36 :
                         size === "medium" ? 32 :
                                             28;
   const bottomPad = Math.round(baseBottomPad * 1.3);
 
-  // Altura da caixa de imagem dentro do polaroid
   const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
 
-  const objectFit: "cover" | "contain" = "contain"; // fixo, evita corte
+  const objectFit: "cover" | "contain" = "contain";
 
   return (
     <div
@@ -72,7 +70,6 @@ export default function Slide({
       }}
       onClick={onClick}
     >
-      {/* 🔹 Estilização da borda com sombra e rotação */}
       <div
         className={`
           bg-slate-50 rounded-lg overflow-hidden flex flex-col h-full w-full
@@ -84,10 +81,8 @@ export default function Slide({
           active:rotate-0 active:shadow-[-2px_2px_0px_0px_#001f54] active:scale-95
         `}
       >
-        {/* Espaço superior */}
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
 
-        {/* Imagem */}
         <div
           className="relative flex items-center justify-center bg-white"
           style={{ height: imgBoxH, paddingLeft: s.lateralPad, paddingRight: s.lateralPad }}
@@ -105,7 +100,6 @@ export default function Slide({
           />
         </div>
 
-        {/* Faixa inferior com usuário e hashtags */}
         <div
           style={{
             height: bottomPad,

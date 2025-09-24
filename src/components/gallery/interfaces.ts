@@ -1,5 +1,5 @@
 export interface SocialMedia {
-  platform: "linkedin" | "instagram" | "x" | "facebook";
+  platform: "instagram" | "x" | "facebook";
   url: string;
   isPrincipal?: boolean;
 }
