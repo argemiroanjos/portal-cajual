@@ -77,10 +77,18 @@ export default function Carousel() {
   const rotationsRef = useRef<number[]>([]);
   const autoplayRef = useRef<number | null>(null);
   const actionRef = useRef(false);
+  const prevCurrentRef = useRef<number | undefined>(undefined);
+  const lastFetchTimeRef = useRef<number>(0);
 
   const { vw, vh, safeBottom, mode } = useViewportLayout();
 
   const loadPhotos = useCallback(async (isInitialLoad = false) => {
+    const now = Date.now();
+    const COOLDOWN_MS = 60000; // 60 segundos
+    if (!isInitialLoad && now - lastFetchTimeRef.current < COOLDOWN_MS) {
+      return;
+    }
+    
     try {
       const response = await api.get('/fotos?limit=20');
       const photosFromApi = response.data.docs;
@@ -89,7 +97,10 @@ export default function Carousel() {
         id: item._id,
         src: item.imageUrl,
       }));
-
+      
+      lastFetchTimeRef.current = Date.now();
+      sessionStorage.setItem('carouselPhotos', JSON.stringify(adaptedPhotos));
+      
       setPhotos((currentPhotos) => {
         const currentIds = new Set(currentPhotos.map(p => p.id));
         const newIds = new Set(adaptedPhotos.map(p => p.id));
@@ -109,17 +120,29 @@ export default function Carousel() {
   }, []);
 
   useEffect(() => {
-    loadPhotos(true); // Carga inicial
+    const cachedPhotos = sessionStorage.getItem('carouselPhotos');
+    if (cachedPhotos) {
+      const parsedPhotos = JSON.parse(cachedPhotos);
+      setPhotos(parsedPhotos);
+      rotationsRef.current = parsedPhotos.map(() => Math.random() * 12 - 6);
+    }
+    loadPhotos(true);
 
     const POLLING_INTERVAL_MS = 120000; // 2 minutos
     const intervalId = setInterval(() => {
-      loadPhotos(false); // Verificações periódicas
+      loadPhotos(false);
     }, POLLING_INTERVAL_MS);
 
-    return () => clearInterval(intervalId); // Limpeza
+    return () => clearInterval(intervalId);
   }, [loadPhotos]);
 
-  // O useEffect antigo que estava aqui foi removido para evitar duplicidade.
+  // EFEITO ATUALIZADO: A notificação foi removida
+  useEffect(() => {
+    if (prevCurrentRef.current === photos.length - 1 && current === 0 && photos.length > 1) {
+      loadPhotos(false);
+    }
+    prevCurrentRef.current = current;
+  }, [current, photos, loadPhotos]);
 
   useEffect(() => {
     if (!photos.length) return;
@@ -171,7 +194,7 @@ export default function Carousel() {
       </div>
     );
   }
-
+  
   const visibleHalf = mode === "desktop" ? 2 : mode === "tablet" ? 1 : 0;
   const centerSize = getCenterSize(mode, vw);
   const spacingFactor = getSpacingFactor(mode);
