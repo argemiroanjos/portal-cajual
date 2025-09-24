@@ -60,14 +60,21 @@ export default function Header() {
                 Galeria
               </Button>
             </Link>
+            <Link href="/register">
+              <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
+                Cadastrar
+              </Button>
+            </Link>
             <Link href="/login">
               <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
                 Entrar
               </Button>
             </Link>
-            <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
-              Sobre Nós
-            </Button>
+            <Link href="/about-us">
+              <Button onClick={toggleMenu} className="w-36 py-2 text-base text-center whitespace-nowrap">
+                Sobre Nós
+              </Button>
+            </Link>
           </div>
         )}
       </div>

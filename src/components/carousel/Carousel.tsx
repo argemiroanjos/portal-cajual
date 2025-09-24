@@ -85,7 +85,7 @@ export default function Carousel() {
 
     async function load() {
       /*
-      // 🔹 Integração API futura
+      // 🔹 Integração futura com backend
       const apiData = await photoService.fetchCarouselPhotos();
       const adaptedPhotos = apiData.map((item:any) => ({
         id: item._id,
@@ -221,11 +221,14 @@ export default function Carousel() {
         }}
         aria-live="polite"
       >
-        <Controlls mode={mode} onPrev={prev} onNext={next} anchorPx={anchorPx} />
+        {/* 🔹 Forçar os controles acima dos slides */}
+        <div className="absolute inset-0 flex justify-between items-center z-50 pointer-events-none">
+          <Controlls mode={mode} onPrev={prev} onNext={next} anchorPx={anchorPx} />
+        </div>
 
         <div
           id="carousel-slides"
-          className="absolute top-0 bottom-0 flex items-center justify-center"
+          className="absolute top-0 bottom-0 flex items-center justify-center z-10"
           style={{ left: gutter + 12, right: gutter + 12 }}
         >
           {slides.map((s) => (
@@ -240,10 +243,8 @@ export default function Carousel() {
               blur={s.blur}
               opacity={s.opacity}
               isCenter={s.idx === current}
-              // fitMode removido, agora fixo no Slide.tsx
             />
           ))}
-
         </div>
       </div>
 
