@@ -75,8 +75,9 @@ export default function Slide({
           border-4 border-[#001f54]
           shadow-[-8px_8px_0px_0px_#001f54]
           transform transition-transform
-          hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54]
           -rotate-1
+          hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54]
+          active:rotate-0 active:shadow-[-2px_2px_0px_0px_#001f54] active:scale-95
         `}
       >
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
