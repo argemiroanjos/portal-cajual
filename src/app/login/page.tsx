@@ -66,9 +66,9 @@ export default function LoginPage() {
           </Button>
         </form>
         <p className="text-center text-gray-600 mt-4">
-          Não tem uma conta?{" "}
-          <Link href="/registro" className="text-blue-600 hover:underline font-semibold">
-            Crie uma agora
+          Esqueceu sua senha?{" "}
+          <Link href="/recovery-password" className="text-blue-600 hover:underline font-semibold">
+            Clique aqui
           </Link>
         </p>
       </div>

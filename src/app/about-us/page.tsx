@@ -19,7 +19,7 @@ const devs: DevCardProps[] = [
     name: "Herick Moreira",
     role: "Desenvolvedor Fullstack",
     imageUrl: "/assets/devs/herick2.jpeg",
-    description: "Java e rock and roll.",
+    description: "Ritmo de folia.",
     socialLinks: [
       { platform: 'github', url: 'https://github.com/herick2D' },
       { platform: 'linkedin', url: 'https://linkedin.com/in/herick-moreira' },

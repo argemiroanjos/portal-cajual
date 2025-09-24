@@ -62,11 +62,7 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
     formData.append('hashtags', JSON.stringify(hashtags.split(',').map(h => h.trim())));
 
     try {
-      await api.post("/", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await api.post("/fotos", formData);
 
       toast.dismiss(loadingToastId);
       toast.success("Foto publicada com sucesso!");
@@ -137,7 +133,7 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
             )}
             <div>
               <label className="block text-gray-700 font-medium mb-1" htmlFor="hashtags">
-                Hashtags (separadas por vírgula)
+                Hashtags
               </label>
               <input
                 id="hashtags"
@@ -150,7 +146,7 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
             </div>
 
             <div className="flex justify-between items-center gap-4">
-               <Button onClick={() => setSelectedFile(null)} className="bg-gray-200 text-gray-800 px-4 py-2 text-sm hover:bg-gray-300">
+              <Button onClick={() => setSelectedFile(null)} className="bg-gray-200 text-gray-800 px-4 py-2 text-sm hover:bg-gray-300">
                 <CornerUpLeft className="w-4 h-4 mr-2" />
                 Trocar Foto
               </Button>
