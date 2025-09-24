@@ -5,8 +5,9 @@ import Slide from "./Slide";
 import Controlls from "./Controlls";
 import { Photo } from "../gallery/interfaces";
 import { useViewportLayout } from "@/hooks/useViewportLayout";
+import api from "@/lib/api";
+import toast from "react-hot-toast";
 
-// Tipagem dos slides
 type SizeName = "large" | "medium" | "small";
 type Mode = "mobile" | "tablet" | "desktop";
 
@@ -22,7 +23,7 @@ type SlideData = {
   rotation: number;
 };
 
-/* ========= Helpers ========= */
+/* ======= Helpers ====== */
 function getCenterSize(mode: Mode, vw: number) {
   if (typeof window === "undefined") return 240;
   if (mode === "desktop") return 420;
@@ -75,45 +76,51 @@ export default function Carousel() {
   const [current, setCurrent] = useState(0);
   const rotationsRef = useRef<number[]>([]);
   const autoplayRef = useRef<number | null>(null);
-  const actionRef = useRef(false); // controle de debounce
+  const actionRef = useRef(false);
 
   const { vw, vh, safeBottom, mode } = useViewportLayout();
 
-  /* Carregamento (mock → backend futuro) */
-  useEffect(() => {
-    let mounted = true;
+  const loadPhotos = useCallback(async (isInitialLoad = false) => {
+    try {
+      const response = await api.get('/fotos?limit=20');
+      const photosFromApi = response.data.docs;
 
-    async function load() {
-      /*
-      // 🔹 Integração API futura
-      const apiData = await photoService.fetchCarouselPhotos();
-      const adaptedPhotos = apiData.map((item:any) => ({
+      const adaptedPhotos: Photo[] = photosFromApi.map((item: any) => ({
         id: item._id,
         src: item.imageUrl,
       }));
-      setPhotos(adaptedPhotos);
-      rotationsRef.current = adaptedPhotos.map(() => Math.random() * 12 - 6);
-      */
 
-      const local: Photo[] = [
-        { id: "1", src: "/photos/photo1.png" },
-        { id: "2", src: "/photos/photo2.png" },
-        { id: "3", src: "/photos/photo3.png" },
-        { id: "4", src: "/photos/photo4.png" },
-        { id: "5", src: "/photos/photo5.png" },
-        { id: "6", src: "/photos/photo6.png" },
-      ];
+      setPhotos((currentPhotos) => {
+        const currentIds = new Set(currentPhotos.map(p => p.id));
+        const newIds = new Set(adaptedPhotos.map(p => p.id));
+        if (currentIds.size === newIds.size && [...currentIds].every(id => newIds.has(id))) {
+          return currentPhotos;
+        }
+        rotationsRef.current = adaptedPhotos.map(() => Math.random() * 12 - 6);
+        return adaptedPhotos;
+      });
 
-      if (!mounted) return;
-      setPhotos(local);
-      rotationsRef.current = local.map(() => Math.random() * 12 - 6);
+    } catch (error) {
+      console.error("Erro ao carregar fotos para o carrossel:", error);
+      if (isInitialLoad) {
+        toast.error("Não foi possível carregar as fotos da galeria.");
+      }
     }
-
-    load();
-    return () => { mounted = false; };
   }, []);
 
-  /* Autoplay com debounce */
+  useEffect(() => {
+    loadPhotos(true); // Carga inicial
+
+    const POLLING_INTERVAL_MS = 120000; // 2 minutos
+    const intervalId = setInterval(() => {
+      loadPhotos(false); // Verificações periódicas
+    }, POLLING_INTERVAL_MS);
+
+    return () => clearInterval(intervalId); // Limpeza
+  }, [loadPhotos]);
+
+  // O useEffect antigo que estava aqui foi removido para evitar duplicidade.
+
   useEffect(() => {
     if (!photos.length) return;
     const INTERVAL_MS = mode === "mobile" ? 4500 : 4000;
@@ -143,7 +150,6 @@ export default function Carousel() {
     return () => { stop(); document.removeEventListener("visibilitychange", onVisibilityChange); };
   }, [photos, mode]);
 
-  /* Controles */
   const prev = useCallback(() => {
     if (actionRef.current) return;
     actionRef.current = true;
@@ -158,14 +164,19 @@ export default function Carousel() {
     setTimeout(() => { actionRef.current = false; }, 200);
   }, [photos]);
 
-  if (!photos.length) return null;
+  if (!photos.length) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <p className="text-white text-lg text-shadow-dark">Carregando fotos...</p>
+      </div>
+    );
+  }
 
   const visibleHalf = mode === "desktop" ? 2 : mode === "tablet" ? 1 : 0;
   const centerSize = getCenterSize(mode, vw);
   const spacingFactor = getSpacingFactor(mode);
   const gutter = getGutter(mode);
 
-  /* Preparação dos slides visíveis */
   const slides: SlideData[] = photos.map((photo, i) => {
     let offset = i - current;
     if (offset > photos.length / 2) offset -= photos.length;
@@ -180,13 +191,11 @@ export default function Carousel() {
     };
   }).filter((s): s is SlideData => s !== null);
 
-  /* Altura do container */
   const CTA_RESERVE = 60;
   const mobileHeightPx = Math.max(260, vh - CTA_RESERVE - safeBottom);
   const mobileMax = Math.min(440, Math.round(vh * 0.52));
   const containerHeight = mode === "desktop" ? 560 : mode === "tablet" ? 500 : Math.min(mobileHeightPx, mobileMax);
 
-  /* Cálculo da posição das setas */
   const ARROW = getArrowSize(mode);
   const POLA_CENTER_W = mode === "mobile" ? 320 : 420;
   const POLA_NEIGHBOR_W = 320;
@@ -197,7 +206,6 @@ export default function Carousel() {
     ? (POLA_CENTER_W / 2) + SAFE_INNER + (ARROW / 2)
     : txNeighbor + (POLA_NEIGHBOR_W / 2) + SAFE_OUTER + (ARROW / 2);
 
-  /* ========== Render ========= */
   return (
     <section
       className="relative w-full flex flex-col items-center"
@@ -240,10 +248,9 @@ export default function Carousel() {
               blur={s.blur}
               opacity={s.opacity}
               isCenter={s.idx === current}
-              // fitMode removido, agora fixo no Slide.tsx
+              fitMode={mode === "mobile" ? "contain-mobile-large" : "cover"}
             />
           ))}
-
         </div>
       </div>
 
@@ -254,6 +261,7 @@ export default function Carousel() {
             className={`w-3 h-3 rounded-full ${idx === current ? "bg-yellow-500" : "bg-gray-300"}`}
             aria-label={`Slide ${idx + 1}`}
             aria-current={idx === current ? "true" : "false"}
+            onClick={() => setCurrent(idx)}
           />
         ))}
       </div>

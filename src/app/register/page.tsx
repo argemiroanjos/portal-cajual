@@ -45,7 +45,7 @@ export default function RegistroPage() {
       toast.success("Cadastro realizado com sucesso!");
       
       setTimeout(() => {
-        router.push("/entrar");
+        router.push("/");
       }, 1500);
 
     } catch (err: any) {
@@ -99,7 +99,7 @@ export default function RegistroPage() {
         </form>
         <p className="text-center text-gray-600 mt-4">
           Já tem uma conta?{" "}
-          <Link href="/entrar" className="text-blue-600 hover:underline font-semibold">
+          <Link href="/login" className="text-blue-600 hover:underline font-semibold">
             Faça login
           </Link>
         </p>
