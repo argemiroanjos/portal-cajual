@@ -5,9 +5,9 @@ import GalleryTabs from "./GalleryTab"
 import GalleryGrid from "./GalleryGrid"
 import Lightbox from "./Lightbox"
 import Button from "../Button"
+import Header from "../Header" // <-- importa o Header
 
 import type { Photo } from "./interfaces"
-import { useRouter } from "next/navigation"
 
 type GalleryProps = {
   userPhotos: Photo[]
@@ -18,10 +18,9 @@ type GalleryProps = {
 export default function Gallery({ userPhotos, allPhotos, fetchMore }: GalleryProps) {
   const [tab, setTab] = useState<"user" | "all">("user")
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const router = useRouter()
 
   const photosToDisplay = tab === "user" ? userPhotos : allPhotos
-  const hasMore = false // Placeholder: Implement logic to determine if mais fotos podem ser carregadas
+  const hasMore = false
 
   const handleLoadMore = async () => {
     if (!fetchMore) return
@@ -36,10 +35,8 @@ export default function Gallery({ userPhotos, allPhotos, fetchMore }: GalleryPro
         backgroundAttachment: "scroll",
       }}
     >
-      {/* Botão Voltar fixo */}
-      <div className="fixed top-6 left-6 z-50">
-        <Button onClick={() => router.push("/")}>Voltar</Button>
-      </div>
+      {/* Header fixo no topo, com logo que leva para home */}
+      <Header />
 
       {/* Abas */}
       <GalleryTabs tab={tab} setTab={setTab} />
