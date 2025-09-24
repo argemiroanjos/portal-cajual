@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Button from "@/components/Button";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { AxiosError } from "axios";
 
 export default function RedefinirSenhaPage({ params }: { params: { token: string } }) {
   const router = useRouter();
@@ -41,9 +42,12 @@ export default function RedefinirSenhaPage({ params }: { params: { token: string
         router.push("/login");
       }, 1500);
 
-    } catch (err: any) {
+    } catch (err) {
       toast.dismiss(loadingToastId);
-      const errorMessage = err.response?.data?.message || "Falha ao redefinir a senha.";
+
+      const error = err as AxiosError<{ message?: string }>;
+      const errorMessage = error.response?.data?.message || "Falha ao redefinir a senha.";
+
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -76,7 +80,7 @@ export default function RedefinirSenhaPage({ params }: { params: { token: string
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-[#001f54]"
             />
           </div>
           <div>
@@ -89,11 +93,15 @@ export default function RedefinirSenhaPage({ params }: { params: { token: string
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-[#001f54]"
             />
           </div>
           
-          <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300"
+          >
             {isLoading ? "Salvando..." : "Salvar Nova Senha"}
           </Button>
         </form>

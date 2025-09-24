@@ -30,9 +30,20 @@ export default function LoginPage() {
         router.push("/");
       }, 1000);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.dismiss(loadingToastId);
-      const errorMessage = err.response?.data?.message || err.message || "Falha no login.";
+
+      let errorMessage = "Falha no login.";
+
+      if (err instanceof Error) {
+        // erro genérico do JS
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "response" in err) {
+        // erro no formato do Axios
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        errorMessage = axiosErr.response?.data?.message || errorMessage;
+      }
+
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -54,20 +65,45 @@ export default function LoginPage() {
         </h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="email">E-mail</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"/>
+            <label className="block text-gray-700 font-medium mb-1" htmlFor="email">
+              E-mail
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-[#001f54]"
+            />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="password">Senha</label>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"/>
+            <label className="block text-gray-700 font-medium mb-1" htmlFor="password">
+              Senha
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-[#001f54]"
+            />
           </div>
-          <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300"
+          >
             {isLoading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
         <p className="text-center text-gray-600 mt-4">
           Esqueceu sua senha?{" "}
-          <Link href="/recovery-password" className="text-blue-600 hover:underline font-semibold">
+          <Link
+            href="/recovery-password"
+            className="text-blue-600 hover:underline font-semibold"
+          >
             Clique aqui
           </Link>
         </p>
