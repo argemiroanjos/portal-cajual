@@ -22,7 +22,7 @@ const socialIcons = {
 
 export default function DevCard({ name, role, imageUrl, description, socialLinks }: DevCardProps) {
   return (
-    <div className="w-full max-w-sm bg-slate-50 p-8 rounded-2xl border-4 border-[#001f54] shadow-[-8px_8px_0px_0px_#001f54] transform transition-transform hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54] -rotate-2 flex flex-col items-center text-center">
+    <div className="w-full max-w-sm bg-slate-50 p-8 rounded-2xl border-4 border-[#001f54] shadow-[-8px_8px_0px_0px_#001f54] transform transition-transform -rotate-2 hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54] active:rotate-0 active:shadow-[-2px_2px_0px_0px_#001f54] active:scale-95 flex flex-col items-center text-center">
       <div className="relative w-32 h-32 mb-4">
         <Image
           src={imageUrl}
