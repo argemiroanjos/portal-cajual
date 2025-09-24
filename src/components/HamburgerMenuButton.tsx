@@ -1,24 +1,24 @@
 "use client";
 
-import React from "react";
+import * as React from "react";
 
 interface HamburgerMenuButtonProps {
   isOpen: boolean;
-  onClick?: () => void;
+  onClick: () => void;
   className?: string;
-  "aria-label"?: string;
+  buttonRef: React.RefObject<HTMLButtonElement | null>; // ⬅ aqui
 }
 
 export default function HamburgerMenuButton({
   isOpen,
   onClick,
   className,
-  ...rest
+  buttonRef,
 }: HamburgerMenuButtonProps) {
   return (
     <button
+      ref={buttonRef}
       onClick={onClick}
-      {...rest}
       className={`
         group flex items-center justify-center
         w-12 h-12

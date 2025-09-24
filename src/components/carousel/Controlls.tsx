@@ -35,7 +35,12 @@ export default function Controlls({ onPrev, onNext, mode, anchorPx, brandBlue = 
     "flex items-center justify-center rounded-full bg-yellow-400 text-white shadow-lg hover:bg-yellow-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600";
 
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: "var(--z-controls, 900)" }}>
+    <div
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        zIndex: 200, // garantir que fique acima do conteúdo do carrossel
+      }}
+    >
       <button
         onClick={handlePrev}
         aria-label="Anterior"

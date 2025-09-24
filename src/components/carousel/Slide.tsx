@@ -4,12 +4,11 @@ import Image from "next/image";
 import type { Photo } from "@/components/gallery/interfaces";
 
 type SizeName = "large" | "medium" | "small";
-type FitMode = "cover" | "contain-mobile-large";
 
-const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number; bottomPad: number }> = {
-  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14, bottomPad: 32 },
-  medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10, bottomPad: 26 },
-  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8,  bottomPad: 20 },
+const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number }> = {
+  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
+  medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10 },
+  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8 },
 };
 
 interface SlideProps {
@@ -23,7 +22,8 @@ interface SlideProps {
   opacity: number;
   isCenter: boolean;
   onClick?: () => void;
-  fitMode?: FitMode;
+  userName?: string;
+  hashtags?: string[];
 }
 
 export default function Slide({
@@ -37,20 +37,23 @@ export default function Slide({
   opacity,
   isCenter,
   onClick,
-  fitMode = "cover",
+  userName = "Usuário",
+  hashtags = ["#Cajual2025", "#Festival"],
 }: SlideProps) {
   const s = SIZES[size];
 
   const polaroidTopSpace = size === "large" ? 18 : size === "medium" ? 12 : 8;
-  const imgBoxH =
-    fitMode === "contain-mobile-large"
-      ? Math.min(
-          s.outerH - polaroidTopSpace - s.bottomPad - 8,
-          s.imgH + 36
-        )
-      : s.imgH;
 
-  const objectFit = fitMode === "contain-mobile-large" ? "contain" : "cover";
+  // Faixa inferior 30% maior que base
+  const baseBottomPad = size === "large"  ? 36 :
+                        size === "medium" ? 32 :
+                                            28;
+  const bottomPad = Math.round(baseBottomPad * 1.3);
+
+  // Altura da caixa de imagem dentro do polaroid
+  const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
+
+  const objectFit: "cover" | "contain" = "contain"; // fixo, evita corte
 
   return (
     <div
@@ -69,6 +72,7 @@ export default function Slide({
       }}
       onClick={onClick}
     >
+      {/* 🔹 Estilização da borda com sombra e rotação */}
       <div
         className={`
           bg-slate-50 rounded-lg overflow-hidden flex flex-col h-full w-full
@@ -80,7 +84,10 @@ export default function Slide({
           active:rotate-0 active:shadow-[-2px_2px_0px_0px_#001f54] active:scale-95
         `}
       >
+        {/* Espaço superior */}
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
+
+        {/* Imagem */}
         <div
           className="relative flex items-center justify-center bg-white"
           style={{ height: imgBoxH, paddingLeft: s.lateralPad, paddingRight: s.lateralPad }}
@@ -97,16 +104,25 @@ export default function Slide({
             decoding="sync"
           />
         </div>
+
+        {/* Faixa inferior com usuário e hashtags */}
         <div
           style={{
-            height: s.bottomPad,
+            height: bottomPad,
             background: "#fff",
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
+            padding: "0 4px",
           }}
         >
-          <span className="text-sm font-semibold text-slate-900">#Cajual2025</span>
+          <span className="text-sm font-semibold text-slate-900">{userName}</span>
+          <div className="flex gap-2">
+            {hashtags.map((tag, idx) => (
+              <span key={idx} className="text-xs font-medium text-slate-600">{tag}</span>
+            ))}
+          </div>
         </div>
       </div>
     </div>
