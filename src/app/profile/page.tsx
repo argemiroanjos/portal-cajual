@@ -35,7 +35,7 @@ export default function PerfilPage() {
   useEffect(() => {
     if (!isAuthLoading && !user) {
       toast.error("Você precisa estar logado para acessar seu perfil.");
-      router.push('/entrar');
+      router.push('/login');
     }
   }, [user, isAuthLoading, router]);
 

@@ -65,7 +65,7 @@ export default function GalleryPage() {
         fetchInitialPhotos();
       } else {
         toast.error("Você precisa estar logado para ver a galeria.");
-        router.push('/entrar');
+        router.push('/login');
       }
     }
   }, [user, isAuthLoading, router, fetchInitialPhotos]);
