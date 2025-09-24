@@ -7,11 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 
-// Importando todos os componentes necessários
 import Header from "@/components/Header";
-import GalleryCard from "@/components/gallery/GalleryCard"; // ATUALIZADO
+import GalleryCard from "@/components/gallery/GalleryCard";
 import Button from "@/components/Button";
-import { Camera, Users } from "lucide-react";
 import { UploadModal } from "@/components/UploadModal";
 import EmptyGallery from "@/components/gallery/EmptyGallery";
 
@@ -30,7 +28,6 @@ export default function GalleryPage() {
   const [hasNextUser, setHasNextUser] = useState(true);
   const [hasNextAll, setHasNextAll] = useState(true);
 
-  // Função para adaptar os dados da API para o formato do frontend
   const adaptApiPhotos = (apiDocs: any[]): Photo[] => {
     if (!apiDocs) return [];
     return apiDocs.map((p: any) => ({
@@ -40,7 +37,6 @@ export default function GalleryPage() {
     }));
   };
 
-  // Função centralizada para buscar os dados iniciais
   const fetchInitialPhotos = async () => {
     if (!user) return;
     setIsLoadingPhotos(true);
@@ -60,7 +56,6 @@ export default function GalleryPage() {
     }
   };
 
-  // Efeito para proteger a rota e carregar dados
   useEffect(() => {
     if (!isAuthLoading) {
       if (user) {
@@ -72,7 +67,6 @@ export default function GalleryPage() {
     }
   }, [user, isAuthLoading, router]);
 
-  // Função para carregar mais fotos
   const fetchMore = async () => {
     const isUserTab = activeTab === "user";
     const currentPage = isUserTab ? userPhotosPage : allPhotosPage;
@@ -107,7 +101,6 @@ export default function GalleryPage() {
     }
   };
 
-  // Função para deletar a foto
   const handleDeletePhoto = async (photoId: string) => {
     if (window.confirm("Tem certeza que deseja apagar esta foto?")) {
       const loadingToastId = toast.loading("Apagando foto...");
@@ -123,8 +116,7 @@ export default function GalleryPage() {
       }
     }
   };
-  
-  // Tela de loading inicial
+
   if (isAuthLoading || !user) {
     return (
       <main className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/assets/background.png')"}}>
@@ -159,11 +151,9 @@ export default function GalleryPage() {
 
           <div className="flex justify-center gap-2 sm:gap-4 mb-8">
             <Button onClick={() => setActiveTab('all')} className={`w-40 sm:w-48 ${activeTab === 'all' ? 'bg-yellow-400' : 'bg-white/70 text-blue-800'}`}>
-              <Users className="w-5 h-5 mr-2" />
               Galeria Geral
             </Button>
             <Button onClick={() => setActiveTab('user')} className={`w-40 sm:w-48 ${activeTab === 'user' ? 'bg-yellow-400' : 'bg-white/70 text-blue-800'}`}>
-              <Camera className="w-5 h-5 mr-2" />
               Minhas Fotos
             </Button>
           </div>
