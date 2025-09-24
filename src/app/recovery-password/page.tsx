@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Button from "@/components/Button";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { AxiosError } from "axios";
 
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState("");
@@ -21,13 +22,15 @@ export default function RecuperarSenhaPage() {
       const response = await api.post("/usuario/recuperar-senha", { email });
 
       toast.dismiss(loadingToastId);
-
       toast.success(response.data.message);
       setIsSubmitted(true);
 
-    } catch (err: any) {
+    } catch (err) {
       toast.dismiss(loadingToastId);
-      const errorMessage = err.response?.data?.message || "Falha ao enviar e-mail.";
+
+      const error = err as AxiosError<{ message?: string }>;
+      const errorMessage = error.response?.data?.message || "Falha ao enviar e-mail.";
+
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -73,11 +76,15 @@ export default function RecuperarSenhaPage() {
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-[#001f54]"
                 />
               </div>
               
-              <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300"
+              >
                 {isLoading ? "Enviando..." : "Enviar Link de Recuperação"}
               </Button>
             </form>
