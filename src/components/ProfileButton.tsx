@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "lucide-react";
@@ -7,13 +8,19 @@ import { User } from "lucide-react";
 export default function ProfileButton() {
   const { user, isLoading } = useAuth();
 
-  if (isLoading || !user) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || isLoading || !user) {
     return null;
   }
 
   return (
     <Link 
-      href="/perfil" 
+      href="/profile" 
       aria-label="Acessar perfil de usuário"
       className="
         fixed bottom-6 right-6 z-40
