@@ -6,11 +6,12 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Button from "@/components/Button";
 import toast from "react-hot-toast";
-import api from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  
+  const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +22,7 @@ export default function LoginPage() {
     const loadingToastId = toast.loading("Verificando credenciais...");
 
     try {
-      await api.post("/usuario/autenticacao", { email, password });
+      await login(email, password);
       
       toast.dismiss(loadingToastId);
       toast.success("Login bem-sucedido!");
