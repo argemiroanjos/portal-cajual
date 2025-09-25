@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { Photo, SocialMedia, User } from "@/components/gallery/interfaces";
+import type { Photo } from "@/components/gallery/interfaces";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
@@ -119,7 +119,6 @@ export default function GalleryPage() {
 
   const handleDeletePhoto = async () => {
     if (!photoToDelete) return;
-
     setIsConfirmModalOpen(false);
     const loadingToastId = toast.loading("Apagando foto...");
     try {
@@ -217,6 +216,7 @@ export default function GalleryPage() {
                     photo={photo}
                     onDelete={openDeleteConfirm}
                     isOwner={canDelete}
+                    activeTab={activeTab} // <<< importante
                   />
                 );
               })}
