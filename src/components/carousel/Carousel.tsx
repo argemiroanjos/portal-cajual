@@ -23,7 +23,6 @@ type SlideData = {
   rotation: number;
 };
 
-/* ======= Helpers ====== */
 function getCenterSize(mode: Mode, vw: number) {
   if (typeof window === "undefined") return 240;
   if (mode === "desktop") return 420;
@@ -56,21 +55,18 @@ function computeParams(
 ) {
   const abs = Math.abs(offset);
   const tx = offset * centerSize * spacingFactor;
-
   if (mode === "mobile") {
     if (abs === 0) return { size: "medium", z: 30, scale: 0.92, blur: 0, opacity: 1, tx };
     if (abs === 1) return { size: "small", z: 20, scale: 0.86, blur: 0, opacity: 0.9, tx };
     if (abs === 2) return { size: "small", z: 10, scale: 0.8, blur: 2, opacity: 0.75, tx };
     return { size: "small", z: 0, scale: 0.7, blur: 4, opacity: 0, tx };
   }
-
   if (abs === 0) return { size: "large", z: 30, scale: 1, blur: 0, opacity: 1, tx };
   if (abs === 1) return { size: "medium", z: 20, scale: 0.9, blur: 0, opacity: 0.85, tx };
   if (abs === 2) return { size: "small", z: 10, scale: 0.75, blur: 3, opacity: 0.7, tx };
   return { size: "small", z: 0, scale: 0.6, blur: 6, opacity: 0, tx };
 }
 
-/* ======= Componente ====== */
 export default function Carousel() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [current, setCurrent] = useState(0);
@@ -85,37 +81,35 @@ export default function Carousel() {
   const loadPhotos = useCallback(async (isInitialLoad = false) => {
     const now = Date.now();
     const COOLDOWN_MS = 60000; // 60 segundos
-    if (!isInitialLoad && now - lastFetchTimeRef.current < COOLDOWN_MS) {
-      return;
-    }
+    if (!isInitialLoad && now - lastFetchTimeRef.current < COOLDOWN_MS) return;
     
     try {
       const response = await api.get('/fotos?limit=20');
       const photosFromApi = response.data.docs;
-
       const adaptedPhotos: Photo[] = photosFromApi.map((item: any) => ({
         id: item._id,
         src: item.imageUrl,
+        user: item.user && typeof item.user === "object" ? {
+          id: item.user._id ?? "",
+          name: item.user.name ?? "",
+          lastName: item.user.lastName ?? "",
+          socialMedia: Array.isArray(item.user.socialMedia) ? item.user.socialMedia : [],
+        } : undefined,
+        hashtags: Array.isArray(item.hashtags) ? item.hashtags : [],
       }));
       
       lastFetchTimeRef.current = Date.now();
       sessionStorage.setItem('carouselPhotos', JSON.stringify(adaptedPhotos));
-      
       setPhotos((currentPhotos) => {
         const currentIds = new Set(currentPhotos.map(p => p.id));
         const newIds = new Set(adaptedPhotos.map(p => p.id));
-        if (currentIds.size === newIds.size && [...currentIds].every(id => newIds.has(id))) {
-          return currentPhotos;
-        }
+        if (currentIds.size === newIds.size && [...currentIds].every(id => newIds.has(id))) return currentPhotos;
         rotationsRef.current = adaptedPhotos.map(() => Math.random() * 12 - 6);
         return adaptedPhotos;
       });
-
     } catch (error) {
       console.error("Erro ao carregar fotos para o carrossel:", error);
-      if (isInitialLoad) {
-        toast.error("Não foi possível carregar as fotos da galeria.");
-      }
+      if (isInitialLoad) toast.error("Não foi possível carregar as fotos da galeria.");
     }
   }, []);
 
@@ -127,16 +121,11 @@ export default function Carousel() {
       rotationsRef.current = parsedPhotos.map(() => Math.random() * 12 - 6);
     }
     loadPhotos(true);
-
     const POLLING_INTERVAL_MS = 120000; // 2 minutos
-    const intervalId = setInterval(() => {
-      loadPhotos(false);
-    }, POLLING_INTERVAL_MS);
-
+    const intervalId = setInterval(() => { loadPhotos(false); }, POLLING_INTERVAL_MS);
     return () => clearInterval(intervalId);
   }, [loadPhotos]);
 
-  // EFEITO ATUALIZADO: A notificação foi removida
   useEffect(() => {
     if (prevCurrentRef.current === photos.length - 1 && current === 0 && photos.length > 1) {
       loadPhotos(false);
@@ -147,7 +136,6 @@ export default function Carousel() {
   useEffect(() => {
     if (!photos.length) return;
     const INTERVAL_MS = mode === "mobile" ? 4500 : 4000;
-
     function start() {
       stop();
       autoplayRef.current = window.setInterval(() => {
@@ -158,16 +146,13 @@ export default function Carousel() {
         }
       }, INTERVAL_MS);
     }
-
     function stop() {
       if (autoplayRef.current !== null) {
         clearInterval(autoplayRef.current);
         autoplayRef.current = null;
       }
     }
-
     function onVisibilityChange() { if (document.hidden) stop(); else start(); }
-
     start();
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => { stop(); document.removeEventListener("visibilitychange", onVisibilityChange); };
@@ -253,7 +238,6 @@ export default function Carousel() {
         aria-live="polite"
       >
         <Controlls mode={mode} onPrev={prev} onNext={next} anchorPx={anchorPx} />
-
         <div
           id="carousel-slides"
           className="absolute top-0 bottom-0 flex items-center justify-center"
@@ -272,11 +256,11 @@ export default function Carousel() {
               opacity={s.opacity}
               isCenter={s.idx === current}
               fitMode={mode === "mobile" ? "contain-mobile-large" : "cover"}
+              activeTab="all" // Importante para tratar links igual galeria
             />
           ))}
         </div>
       </div>
-
       <div className={`flex gap-2 ${mode === "mobile" ? "mt-1 mb-1" : "mt-6 mb-6"}`}>
         {photos.map((_, idx) => (
           <button
