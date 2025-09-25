@@ -52,15 +52,19 @@ export default function Slide({
 
   const mainSocial = photo.user?.socialMedia?.find((s) => s.isPrincipal) || photo.user?.socialMedia?.[0];
 
-  // Construir URL Instagram a partir do username
+  // Construir URL Instagram a partir da url
   const instagramUrl =
-    mainSocial && mainSocial.platform === "instagram" && mainSocial.username
-      ? `https://instagram.com/${mainSocial.username.replace(/^@/, "")}`
-      : mainSocial?.url || "";
+    mainSocial && mainSocial.platform === "instagram" && mainSocial.url
+      ? mainSocial.url.startsWith("http")
+        ? mainSocial.url
+        : `https://instagram.com/${mainSocial.url.replace(/^@/, "")}`
+      : "";
 
-  const hasValidInstagramUrl = instagramUrl && instagramUrl !== "";
+  const hasValidInstagramUrl = instagramUrl !== "";
 
-  const hashtags = Array.isArray(photo.hashtags) ? photo.hashtags.slice(0, 2).map((tag) => tag.trim()).join(" ") : "";
+  const hashtags = Array.isArray(photo.hashtags)
+    ? photo.hashtags.slice(0, 2).map((tag) => tag.trim()).join(" ")
+    : "";
 
   return (
     <div
@@ -95,8 +99,8 @@ export default function Slide({
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#f3f4f6",
-            borderTopLeftRadius: 6,  // Borda superior arredondada
-            borderTopRightRadius: 6  // Borda superior arredondada
+            borderTopLeftRadius: 6,
+            borderTopRightRadius: 6,
           }}
         >
           <Image
@@ -109,8 +113,8 @@ export default function Slide({
               maxWidth: "100%",
               maxHeight: "100%",
               objectFit: "contain",
-              borderTopLeftRadius: 6,  // Borda superior arredondada para a imagem
-              borderTopRightRadius: 6  // Borda superior arredondada para a imagem
+              borderTopLeftRadius: 6,
+              borderTopRightRadius: 6,
             }}
             priority={isCenter}
             loading={isCenter ? "eager" : "lazy"}

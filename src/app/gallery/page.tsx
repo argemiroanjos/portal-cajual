@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { Photo } from "@/components/gallery/interfaces";
+import type { Photo, SocialMedia } from "@/components/gallery/interfaces";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
@@ -14,9 +14,28 @@ import { UploadModal } from "@/components/UploadModal";
 import EmptyGallery from "@/components/gallery/EmptyGallery";
 import ConfirmModal from "@/components/ConfirmModal";
 
-const adaptApiPhotos = (apiDocs: any[]): Photo[] => {
+// Tipagem da resposta da API
+type ApiPhoto = {
+  _id: string;
+  imageUrl: string;
+  user?: {
+    _id?: string;
+    name?: string;
+    lastName?: string;
+    socialMedia?: Array<{
+      platform: string;
+      username: string;
+      isPrincipal?: boolean;
+    }>;
+  };
+  hashtags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+const adaptApiPhotos = (apiDocs: ApiPhoto[]): Photo[] => {
   if (!apiDocs) return [];
-  return apiDocs.map((p: any) => ({
+  return apiDocs.map((p) => ({
     id: p._id,
     src: p.imageUrl,
     user:
@@ -26,7 +45,16 @@ const adaptApiPhotos = (apiDocs: any[]): Photo[] => {
             name: p.user.name ?? "",
             lastName: p.user.lastName ?? "",
             socialMedia: Array.isArray(p.user.socialMedia)
-              ? p.user.socialMedia
+              ? p.user.socialMedia.map<SocialMedia>((s) => ({
+                  platform:
+                    s.platform === "instagram" ||
+                    s.platform === "x" ||
+                    s.platform === "facebook"
+                      ? s.platform
+                      : "instagram", // default caso venha outro valor
+                  url: `https://www.${s.platform}.com/${s.username}`, // gera URL a partir do username
+                  isPrincipal: s.isPrincipal,
+                }))
               : [],
           }
         : undefined,
@@ -58,8 +86,8 @@ export default function GalleryPage() {
     setIsLoadingPhotos(true);
     try {
       const [userRes, allRes] = await Promise.all([
-        api.get('/fotos/minhas-fotos?page=1'),
-        api.get('/fotos?page=1'),
+        api.get("/fotos/minhas-fotos?page=1"),
+        api.get("/fotos?page=1"),
       ]);
       setUserPhotos(adaptApiPhotos(userRes.data.docs));
       setAllPhotos(adaptApiPhotos(allRes.data.docs));
@@ -78,7 +106,7 @@ export default function GalleryPage() {
         fetchInitialPhotos();
       } else {
         toast.error("Você precisa estar logado para ver a galeria.");
-        router.push('/login');
+        router.push("/login");
       }
     }
   }, [user, isAuthLoading, router, fetchInitialPhotos]);
@@ -94,7 +122,9 @@ export default function GalleryPage() {
     }
 
     const nextPage = currentPage + 1;
-    const endpoint = isUserTab ? `/fotos/minhas-fotos?page=${nextPage}` : `/fotos?page=${nextPage}`;
+    const endpoint = isUserTab
+      ? `/fotos/minhas-fotos?page=${nextPage}`
+      : `/fotos?page=${nextPage}`;
     const loadingToastId = toast.loading("Carregando mais fotos...");
 
     try {
@@ -148,7 +178,9 @@ export default function GalleryPage() {
       >
         <Header />
         <div className="flex justify-center items-center h-[calc(100vh-80px)]">
-          <p className="text-xl font-semibold text-white text-shadow-dark">Verificando acesso...</p>
+          <p className="text-xl font-semibold text-white text-shadow-dark">
+            Verificando acesso...
+          </p>
         </div>
       </main>
     );
@@ -172,7 +204,8 @@ export default function GalleryPage() {
               Galeria de Fotos
             </h1>
             <p className="max-w-2xl text-lg text-blue-700 text-shadow-light">
-              Explore os momentos incríveis do festival ou veja as fotos que você publicou.
+              Explore os momentos incríveis do festival ou veja as fotos que você
+              publicou.
             </p>
           </section>
 
@@ -216,18 +249,24 @@ export default function GalleryPage() {
                     photo={photo}
                     onDelete={openDeleteConfirm}
                     isOwner={canDelete}
-                    activeTab={activeTab} // <<< importante
+                    activeTab={activeTab}
                   />
                 );
               })}
             </div>
           ) : (
-            <EmptyGallery activeTab={activeTab} onUploadClick={() => setUploadModalOpen(true)} />
+            <EmptyGallery
+              activeTab={activeTab}
+              onUploadClick={() => setUploadModalOpen(true)}
+            />
           )}
 
           {hasNextPage && !isLoadingPhotos && photosToShow.length > 0 && (
             <div className="flex justify-center mt-12">
-              <Button onClick={fetchMore} className="bg-blue-600 text-white px-8 py-3">
+              <Button
+                onClick={fetchMore}
+                className="bg-blue-600 text-white px-8 py-3"
+              >
                 Carregar Mais
               </Button>
             </div>

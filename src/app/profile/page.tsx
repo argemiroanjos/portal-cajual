@@ -24,31 +24,38 @@ export default function PerfilPage() {
     if (user) {
       setName(user.name);
       setLastName(user.lastName);
-      const socialObject = user.socialMedia?.reduce((acc, curr) => {
-        acc[curr.platform] = curr.username;
+
+      // Reduzimos o socialMedia com tipagem segura
+      const socialObject = user.socialMedia?.reduce<
+        Record<"instagram" | "x" | "facebook", string>
+      >((acc, curr) => {
+        if (curr.platform === "instagram" || curr.platform === "x" || curr.platform === "facebook") {
+          acc[curr.platform] = curr.username;
+        }
         return acc;
-      }, {} as any);
+      }, { instagram: "", x: "", facebook: "" });
+
       setSocialMedia(socialObject || { instagram: "", x: "", facebook: "" });
     }
   }, [user]);
-  
+
   useEffect(() => {
     if (!isAuthLoading && !user) {
       toast.error("Você precisa estar logado para acessar seu perfil.");
-      router.push('/login');
+      router.push("/login");
     }
   }, [user, isAuthLoading, router]);
 
   const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const loadingToastId = toast.loading("Salvando alterações...");
-    
+
     const socialMediaArray = Object.entries(socialMedia)
       .filter(([, username]) => username)
       .map(([platform, username]) => ({ platform, username }));
 
     try {
-      await api.patch('/usuario/perfil', { name, lastName, socialMedia: socialMediaArray });
+      await api.patch("/usuario/perfil", { name, lastName, socialMedia: socialMediaArray });
       toast.dismiss(loadingToastId);
       toast.success("Perfil atualizado com sucesso!");
     } catch (error) {
@@ -61,7 +68,7 @@ export default function PerfilPage() {
     if (window.confirm("Você tem certeza que deseja desativar sua conta? Esta ação não pode ser desfeita.")) {
       const loadingToastId = toast.loading("Desativando sua conta...");
       try {
-        await api.delete('/usuario/perfil');
+        await api.delete("/usuario/perfil");
         toast.dismiss(loadingToastId);
         toast.success("Conta desativada. Sentiremos sua falta!");
         logout();
@@ -87,7 +94,7 @@ export default function PerfilPage() {
       </main>
     );
   }
-  
+
   return (
     <main
       className="min-h-screen flex flex-col items-center p-4 sm:p-8 gap-12 bg-cover bg-center bg-no-repeat"
@@ -104,11 +111,21 @@ export default function PerfilPage() {
           <div className="flex gap-4">
             <div className="w-1/2">
               <label className="block text-gray-700 font-medium mb-1">Nome</label>
-              <input value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+                className="w-full px-4 py-2 border rounded-lg text-[#001f54]"
+              />
             </div>
             <div className="w-1/2">
               <label className="block text-gray-700 font-medium mb-1">Sobrenome</label>
-              <input value={lastName} onChange={e => setLastName(e.target.value)} required className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
+              <input
+                value={lastName}
+                onChange={e => setLastName(e.target.value)}
+                required
+                className="w-full px-4 py-2 border rounded-lg text-[#001f54]"
+              />
             </div>
           </div>
 
@@ -116,18 +133,39 @@ export default function PerfilPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-gray-700 font-medium mb-1">Instagram</label>
-              <input name="instagram" value={socialMedia.instagram || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
+              <input
+                name="instagram"
+                value={socialMedia.instagram || ""}
+                onChange={handleSocialChange}
+                placeholder="seu-usuario"
+                className="w-full px-4 py-2 border rounded-lg text-[#001f54]"
+              />
             </div>
             <div>
               <label className="block text-gray-700 font-medium mb-1">X (Twitter)</label>
-              <input name="x" value={socialMedia.x || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
+              <input
+                name="x"
+                value={socialMedia.x || ""}
+                onChange={handleSocialChange}
+                placeholder="seu-usuario"
+                className="w-full px-4 py-2 border rounded-lg text-[#001f54]"
+              />
             </div>
             <div>
               <label className="block text-gray-700 font-medium mb-1">Facebook</label>
-              <input name="facebook" value={socialMedia.facebook || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
+              <input
+                name="facebook"
+                value={socialMedia.facebook || ""}
+                onChange={handleSocialChange}
+                placeholder="seu-usuario"
+                className="w-full px-4 py-2 border rounded-lg text-[#001f54]"
+              />
             </div>
           </div>
-          <Button type="submit" className="w-full bg-blue-600 text-white py-3">Salvar Alterações</Button>
+
+          <Button type="submit" className="w-full bg-blue-600 text-white py-3">
+            Salvar Alterações
+          </Button>
         </form>
       </div>
 
@@ -136,7 +174,9 @@ export default function PerfilPage() {
         <p className="text-red-700 mt-2 mb-4">
           A desativação da sua conta é uma ação permanente e removerá seu acesso à plataforma.
         </p>
-        <Button onClick={handleDeactivateAccount} className="w-full bg-red-600 text-white py-3">Desativar minha conta</Button>
+        <Button onClick={handleDeactivateAccount} className="w-full bg-red-600 text-white py-3">
+          Desativar minha conta
+        </Button>
       </div>
     </main>
   );

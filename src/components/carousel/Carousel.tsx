@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import Slide from "./Slide";
 import Controlls from "./Controlls";
-import { Photo } from "../gallery/interfaces";
+import { Photo, SocialMedia } from "../gallery/interfaces";
 import { useViewportLayout } from "@/hooks/useViewportLayout";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
@@ -67,6 +67,19 @@ function computeParams(
   return { size: "small", z: 0, scale: 0.6, blur: 6, opacity: 0, tx };
 }
 
+// Interface para tipar o retorno do backend
+interface ApiPhoto {
+  _id: string;
+  imageUrl: string;
+  hashtags?: string[];
+  user?: {
+    _id: string;
+    name: string;
+    lastName: string;
+    socialMedia?: { platform: string; username: string; isPrincipal?: boolean }[];
+  };
+}
+
 export default function Carousel() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [current, setCurrent] = useState(0);
@@ -84,20 +97,27 @@ export default function Carousel() {
     if (!isInitialLoad && now - lastFetchTimeRef.current < COOLDOWN_MS) return;
     
     try {
-      const response = await api.get('/fotos?limit=20');
+      const response = await api.get<{ docs: ApiPhoto[] }>('/fotos?limit=20');
       const photosFromApi = response.data.docs;
-      const adaptedPhotos: Photo[] = photosFromApi.map((item: any) => ({
+
+      const adaptedPhotos: Photo[] = photosFromApi.map((item) => ({
         id: item._id,
         src: item.imageUrl,
-        user: item.user && typeof item.user === "object" ? {
-          id: item.user._id ?? "",
-          name: item.user.name ?? "",
-          lastName: item.user.lastName ?? "",
-          socialMedia: Array.isArray(item.user.socialMedia) ? item.user.socialMedia : [],
+        user: item.user ? {
+          id: item.user._id,
+          name: item.user.name,
+          lastName: item.user.lastName,
+          socialMedia: item.user.socialMedia?.map((sm): SocialMedia => ({
+            platform: sm.platform as "instagram" | "x" | "facebook",
+            url: sm.platform === "instagram" ? `https://instagram.com/${sm.username}` :
+                 sm.platform === "x" ? `https://x.com/${sm.username}` :
+                 sm.platform === "facebook" ? `https://facebook.com/${sm.username}` : sm.username,
+            isPrincipal: sm.isPrincipal,
+          })) || [],
         } : undefined,
-        hashtags: Array.isArray(item.hashtags) ? item.hashtags : [],
+        hashtags: item.hashtags || [],
       }));
-      
+
       lastFetchTimeRef.current = Date.now();
       sessionStorage.setItem('carouselPhotos', JSON.stringify(adaptedPhotos));
       setPhotos((currentPhotos) => {
@@ -116,7 +136,7 @@ export default function Carousel() {
   useEffect(() => {
     const cachedPhotos = sessionStorage.getItem('carouselPhotos');
     if (cachedPhotos) {
-      const parsedPhotos = JSON.parse(cachedPhotos);
+      const parsedPhotos: Photo[] = JSON.parse(cachedPhotos);
       setPhotos(parsedPhotos);
       rotationsRef.current = parsedPhotos.map(() => Math.random() * 12 - 6);
     }
@@ -243,22 +263,25 @@ export default function Carousel() {
           className="absolute top-0 bottom-0 flex items-center justify-center"
           style={{ left: gutter + 12, right: gutter + 12 }}
         >
-          {slides.map((s) => (
-            <Slide
-              key={s.photo.id}
-              photo={s.photo}
-              rotation={s.rotation}
-              offsetPx={s.tx}
-              size={s.size}
-              z={s.z}
-              scale={s.scale}
-              blur={s.blur}
-              opacity={s.opacity}
-              isCenter={s.idx === current}
-              fitMode={mode === "mobile" ? "contain-mobile-large" : "cover"}
-              activeTab="all" // Importante para tratar links igual galeria
-            />
-          ))}
+          {slides.map((s) => {
+            const fitMode: "cover" | "contain" = mode === "mobile" ? "contain" : "cover";
+            return (
+              <Slide
+                key={s.photo.id}
+                photo={s.photo}
+                rotation={s.rotation}
+                offsetPx={s.tx}
+                size={s.size}
+                z={s.z}
+                scale={s.scale}
+                blur={s.blur}
+                opacity={s.opacity}
+                isCenter={s.idx === current}
+                fitMode={fitMode}
+                activeTab="all"
+              />
+            );
+          })}
         </div>
       </div>
       <div className={`flex gap-2 ${mode === "mobile" ? "mt-1 mb-1" : "mt-6 mb-6"}`}>
