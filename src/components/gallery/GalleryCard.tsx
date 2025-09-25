@@ -12,6 +12,13 @@ type GalleryCardProps = {
   activeTab: "all" | "user";
 };
 
+interface SocialMedia {
+  platform: string;
+  username?: string;
+  url?: string;
+  isPrincipal?: boolean;
+}
+
 const socialIcons = {
   github: <Github size={20} />,
   linkedin: <Linkedin size={20} />,
@@ -29,18 +36,24 @@ export default function GalleryCard({ photo, onDelete, isOwner, activeTab }: Gal
 
   if (!photo || !photo.src) return null;
 
-  const mainSocial = photo.user?.socialMedia?.find(s => s.isPrincipal) || photo.user?.socialMedia?.[0];
-  const instagramUrl = mainSocial && mainSocial.platform === "instagram" && mainSocial.username
-    ? `https://instagram.com/${mainSocial.username.replace(/^@/, "")}`
-    : (mainSocial?.url || "");
+  const mainSocial: SocialMedia | undefined =
+    photo.user?.socialMedia?.find((s) => s.isPrincipal) || photo.user?.socialMedia?.[0];
+
+  const instagramUrl =
+    mainSocial && mainSocial.platform === "instagram" && mainSocial.username
+      ? `https://instagram.com/${mainSocial.username.replace(/^@/, "")}`
+      : mainSocial?.url || "";
+
   const hasInstagram = instagramUrl !== "";
   const hasHashtags = photo.hashtags && photo.hashtags.length > 0 && photo.hashtags[0] !== "";
 
   return (
     <div className="[perspective:1000px] group cursor-pointer">
       <div
-        className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
-        style={{ aspectRatio: '4/5' }}
+        className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
+          isFlipped ? '[transform:rotateY(180deg)]' : ''
+        }`}
+        style={{ aspectRatio: "4/5" }}
         onClick={() => setIsFlipped(!isFlipped)}
       >
         {/* Frente */}
@@ -48,7 +61,7 @@ export default function GalleryCard({ photo, onDelete, isOwner, activeTab }: Gal
           <div className="relative w-full flex-1">
             <Image
               src={photo.src}
-              alt={`Foto de ${photo.user?.name || 'usuário'}`}
+              alt={`Foto de ${photo.user?.name || "usuário"}`}
               fill
               className="object-contain bg-slate-100 rounded-sm"
             />
@@ -80,7 +93,10 @@ export default function GalleryCard({ photo, onDelete, isOwner, activeTab }: Gal
             {hasHashtags && (
               <div className="flex flex-wrap gap-1.5 overflow-hidden h-6">
                 {photo.hashtags!.map((tag, index) => (
-                  <span key={index} className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                  <span
+                    key={index}
+                    className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded-full"
+                  >
                     {tag}
                   </span>
                 ))}
@@ -90,7 +106,10 @@ export default function GalleryCard({ photo, onDelete, isOwner, activeTab }: Gal
 
           {isOwner && (
             <button
-              onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(photo.id);
+              }}
               className="absolute top-2 right-2 p-1.5 bg-yellow-400 text-[#001f54] rounded-full transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100"
               aria-label="Apagar foto"
             >
@@ -130,7 +149,10 @@ export default function GalleryCard({ photo, onDelete, isOwner, activeTab }: Gal
                 <h4 className="font-semibold text-gray-700 text-sm mb-1">Hashtags:</h4>
                 <div className="flex flex-wrap gap-2">
                   {photo.hashtags!.map((tag, index) => (
-                    <span key={index} className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                    <span
+                      key={index}
+                      className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                    >
                       {tag}
                     </span>
                   ))}
@@ -139,7 +161,10 @@ export default function GalleryCard({ photo, onDelete, isOwner, activeTab }: Gal
             )}
           </div>
 
-          <button onClick={() => setIsFlipped(false)} className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-black">
+          <button
+            onClick={() => setIsFlipped(false)}
+            className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-black"
+          >
             <ArrowLeft size={16} /> Voltar para a foto
           </button>
         </div>

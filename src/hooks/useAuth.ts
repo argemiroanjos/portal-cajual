@@ -27,11 +27,17 @@ export function useAuth() {
     try {
       const response = await api.get("/usuario/perfil");
       setUser(response.data);
-    } catch (error: any) {
-      if (error.response && error.response.status === 401) {
-        setUser(null);
+    } catch (err: unknown) {
+      // Type guard para verificar se é um erro do Axios
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosErr = err as { response?: { status?: number } };
+        if (axiosErr.response?.status === 401) {
+          setUser(null);
+        } else {
+          console.error("Erro inesperado ao verificar autenticação:", err);
+        }
       } else {
-        console.error("Erro inesperado ao verificar autenticação:", error);
+        console.error("Erro inesperado ao verificar autenticação:", err);
       }
     } finally {
       setIsLoading(false);
@@ -48,8 +54,11 @@ export function useAuth() {
       setUser(null);
       toast.success("Você saiu com sucesso!");
       window.location.href = "/";
-    } catch (error) {
-      toast.error("Houve um erro ao fazer logout.");
+    } catch (err: unknown) {
+      // Type guard para erro genérico
+      let errorMessage = "Houve um erro ao fazer logout.";
+      if (err instanceof Error) errorMessage = err.message;
+      toast.error(errorMessage);
     }
   };
 

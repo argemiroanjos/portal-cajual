@@ -92,9 +92,23 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       toast.success("Foto publicada com sucesso!");
       onUploadSuccess?.();
       handleClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.dismiss(loadingToastId);
-      const errorMessage = err.response?.data?.message || "Falha ao publicar a foto.";
+
+      let errorMessage = "Falha ao publicar a foto.";
+
+      // Type guard para erro do Axios
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          errorMessage = axiosErr.response.data.message;
+        } else if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);

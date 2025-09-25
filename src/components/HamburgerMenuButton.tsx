@@ -6,7 +6,7 @@ interface HamburgerMenuButtonProps {
   isOpen: boolean;
   onClick: () => void;
   className?: string;
-  buttonRef: React.RefObject<HTMLButtonElement | null>; // ⬅ aqui
+  buttonRef?: React.RefObject<HTMLButtonElement | null>; // ⬅ agora é opcional
 }
 
 export default function HamburgerMenuButton({
