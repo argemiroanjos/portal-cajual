@@ -25,6 +25,7 @@ interface SlideProps {
   blur: number;
   opacity: number;
   isCenter: boolean;
+  fitMode?: "contain" | "cover"; // opcional, para controle
   onClick?: () => void;
 }
 
@@ -38,6 +39,7 @@ export default function Slide({
   blur,
   opacity,
   isCenter,
+  fitMode = "contain", // valor padrão "contain" para caber inteiro
   onClick,
 }: SlideProps) {
   const s = SIZES[size];
@@ -45,14 +47,13 @@ export default function Slide({
   const baseBottomPad = size === "large" ? 36 : size === "medium" ? 32 : 28;
   const bottomPad = Math.round(baseBottomPad * 1.3);
   const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
-  const objectFit: "cover" | "contain" = "contain";
 
-  // Nome do usuário
+  const objectFit: "cover" | "contain" = fitMode;
+
   const userName = photo.user
     ? `${photo.user.name} ${photo.user.lastName ?? ""}`.trim()
     : "Usuário";
 
-  // Pega o Instagram e extrai o username da URL
   const instagramObj: SocialMedia | undefined = photo.user?.socialMedia?.find(
     (sm) => sm.platform === "instagram" && sm.url
   );
@@ -62,7 +63,6 @@ export default function Slide({
     ? "@" + instagramLink.replace(/\/$/, "").split("/").pop()
     : null;
 
-  // Hashtags separadas por espaço
   const hashtags = Array.isArray(photo.hashtags)
     ? photo.hashtags.map((tag) => tag.trim()).join(" ")
     : "";
@@ -125,25 +125,21 @@ export default function Slide({
             padding: "0 4px",
           }}
         >
-          {/* Nome + Instagram link com fallback */}
           <span className="text-sm font-semibold text-slate-900 text-center">
-            {userName}
             {instagramUsername && instagramLink ? (
-              <>
-                {" · "}
-                <a
-                  href={instagramLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  {instagramUsername}
-                </a>
-              </>
-            ) : null}
+              <a
+                href={instagramLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {instagramUsername}
+              </a>
+            ) : (
+              userName
+            )}
           </span>
 
-          {/* Hashtags separadas por espaço */}
           {hashtags && (
             <span className="text-xs font-medium text-slate-600 mt-1">{hashtags}</span>
           )}

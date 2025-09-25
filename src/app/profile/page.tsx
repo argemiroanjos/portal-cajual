@@ -104,11 +104,11 @@ export default function PerfilPage() {
           <div className="flex gap-4">
             <div className="w-1/2">
               <label className="block text-gray-700 font-medium mb-1">Nome</label>
-              <input value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border rounded-lg"/>
+              <input value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
             </div>
             <div className="w-1/2">
               <label className="block text-gray-700 font-medium mb-1">Sobrenome</label>
-              <input value={lastName} onChange={e => setLastName(e.target.value)} required className="w-full px-4 py-2 border rounded-lg"/>
+              <input value={lastName} onChange={e => setLastName(e.target.value)} required className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
             </div>
           </div>
 
@@ -116,15 +116,15 @@ export default function PerfilPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-gray-700 font-medium mb-1">Instagram</label>
-              <input name="instagram" value={socialMedia.instagram || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg"/>
+              <input name="instagram" value={socialMedia.instagram || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
             </div>
             <div>
               <label className="block text-gray-700 font-medium mb-1">X (Twitter)</label>
-              <input name="x" value={socialMedia.x || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg"/>
+              <input name="x" value={socialMedia.x || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
             </div>
             <div>
               <label className="block text-gray-700 font-medium mb-1">Facebook</label>
-              <input name="facebook" value={socialMedia.facebook || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg"/>
+              <input name="facebook" value={socialMedia.facebook || ''} onChange={handleSocialChange} placeholder="seu-usuario" className="w-full px-4 py-2 border rounded-lg text-[#001f54]"/>
             </div>
           </div>
           <Button type="submit" className="w-full bg-blue-600 text-white py-3">Salvar Alterações</Button>
