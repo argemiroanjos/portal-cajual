@@ -1,14 +1,18 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
-import type { Photo } from "@/components/gallery/interfaces";
+import type { Photo, SocialMedia } from "../gallery/interfaces";
 
 type SizeName = "large" | "medium" | "small";
 
-const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number }> = {
-  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
+const SIZES: Record<
+  SizeName,
+  { outerW: number; outerH: number; imgH: number; lateralPad: number }
+> = {
+  large: { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
   medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10 },
-  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8 },
+  small: { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8 },
 };
 
 interface SlideProps {
@@ -22,8 +26,6 @@ interface SlideProps {
   opacity: number;
   isCenter: boolean;
   onClick?: () => void;
-  userName?: string;
-  hashtags?: string[];
 }
 
 export default function Slide({
@@ -37,21 +39,33 @@ export default function Slide({
   opacity,
   isCenter,
   onClick,
-  userName = "Usuário",
-  hashtags = ["#Cajual2025", "#Festival"],
 }: SlideProps) {
   const s = SIZES[size];
-
   const polaroidTopSpace = size === "large" ? 18 : size === "medium" ? 12 : 8;
-
-  const baseBottomPad = size === "large"  ? 36 :
-                        size === "medium" ? 32 :
-                                            28;
+  const baseBottomPad = size === "large" ? 36 : size === "medium" ? 32 : 28;
   const bottomPad = Math.round(baseBottomPad * 1.3);
-
   const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
-
   const objectFit: "cover" | "contain" = "contain";
+
+  // Nome do usuário
+  const userName = photo.user
+    ? `${photo.user.name} ${photo.user.lastName ?? ""}`.trim()
+    : "Usuário";
+
+  // Pega o Instagram e extrai o username da URL
+  const instagramObj: SocialMedia | undefined = photo.user?.socialMedia?.find(
+    (sm) => sm.platform === "instagram" && sm.url
+  );
+
+  const instagramLink = instagramObj?.url ?? null;
+  const instagramUsername = instagramLink
+    ? "@" + instagramLink.replace(/\/$/, "").split("/").pop()
+    : null;
+
+  // Hashtags separadas por espaço
+  const hashtags = Array.isArray(photo.hashtags)
+    ? photo.hashtags.map((tag) => tag.trim()).join(" ")
+    : "";
 
   return (
     <div
@@ -84,7 +98,7 @@ export default function Slide({
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
 
         <div
-          className="relative flex items-center justify-center bg-white"
+          className="relative flex items-center justify-center"
           style={{ height: imgBoxH, paddingLeft: s.lateralPad, paddingRight: s.lateralPad }}
         >
           <Image
@@ -92,7 +106,7 @@ export default function Slide({
             alt={`Foto ${photo.id}`}
             width={s.outerW}
             height={imgBoxH}
-            className="w-full h-full"
+            className="w-full h-full rounded-t-md"
             style={{ objectFit }}
             priority={isCenter}
             loading={isCenter ? "eager" : "lazy"}
@@ -111,12 +125,28 @@ export default function Slide({
             padding: "0 4px",
           }}
         >
-          <span className="text-sm font-semibold text-slate-900">{userName}</span>
-          <div className="flex gap-2">
-            {hashtags.map((tag, idx) => (
-              <span key={idx} className="text-xs font-medium text-slate-600">{tag}</span>
-            ))}
-          </div>
+          {/* Nome + Instagram link com fallback */}
+          <span className="text-sm font-semibold text-slate-900 text-center">
+            {userName}
+            {instagramUsername && instagramLink ? (
+              <>
+                {" · "}
+                <a
+                  href={instagramLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {instagramUsername}
+                </a>
+              </>
+            ) : null}
+          </span>
+
+          {/* Hashtags separadas por espaço */}
+          {hashtags && (
+            <span className="text-xs font-medium text-slate-600 mt-1">{hashtags}</span>
+          )}
         </div>
       </div>
     </div>
