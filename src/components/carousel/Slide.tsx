@@ -60,9 +60,7 @@ export default function Slide({
 
   const hasValidInstagramUrl = instagramUrl && instagramUrl !== "";
 
-  const hashtags = Array.isArray(photo.hashtags)
-    ? photo.hashtags.slice(0, 2).map((tag) => tag.trim()).join(" ")
-    : "";
+  const hashtags = Array.isArray(photo.hashtags) ? photo.hashtags.slice(0, 2).map((tag) => tag.trim()).join(" ") : "";
 
   return (
     <div
@@ -97,6 +95,8 @@ export default function Slide({
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#f3f4f6",
+            borderTopLeftRadius: 6,  // Borda superior arredondada
+            borderTopRightRadius: 6  // Borda superior arredondada
           }}
         >
           <Image
@@ -104,8 +104,14 @@ export default function Slide({
             alt={`Foto ${photo.id}`}
             width={s.outerW}
             height={imgBoxH}
-            className="w-full h-full object-contain"
-            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+            className="object-contain"
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+              borderTopLeftRadius: 6,  // Borda superior arredondada para a imagem
+              borderTopRightRadius: 6  // Borda superior arredondada para a imagem
+            }}
             priority={isCenter}
             loading={isCenter ? "eager" : "lazy"}
             decoding="sync"
