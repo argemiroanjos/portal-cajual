@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import Slide from "./Slide";
 import Controlls from "./Controlls";
-import { Photo } from "../gallery/interfaces";
+import { Photo, SocialMedia } from "../gallery/interfaces";
 import { useViewportLayout } from "@/hooks/useViewportLayout";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
@@ -23,7 +23,6 @@ type SlideData = {
   rotation: number;
 };
 
-/* ======= Helpers ====== */
 function getCenterSize(mode: Mode, vw: number) {
   if (typeof window === "undefined") return 240;
   if (mode === "desktop") return 420;
@@ -56,21 +55,31 @@ function computeParams(
 ) {
   const abs = Math.abs(offset);
   const tx = offset * centerSize * spacingFactor;
-
   if (mode === "mobile") {
     if (abs === 0) return { size: "medium", z: 30, scale: 0.92, blur: 0, opacity: 1, tx };
     if (abs === 1) return { size: "small", z: 20, scale: 0.86, blur: 0, opacity: 0.9, tx };
     if (abs === 2) return { size: "small", z: 10, scale: 0.8, blur: 2, opacity: 0.75, tx };
     return { size: "small", z: 0, scale: 0.7, blur: 4, opacity: 0, tx };
   }
-
   if (abs === 0) return { size: "large", z: 30, scale: 1, blur: 0, opacity: 1, tx };
   if (abs === 1) return { size: "medium", z: 20, scale: 0.9, blur: 0, opacity: 0.85, tx };
   if (abs === 2) return { size: "small", z: 10, scale: 0.75, blur: 3, opacity: 0.7, tx };
   return { size: "small", z: 0, scale: 0.6, blur: 6, opacity: 0, tx };
 }
 
-/* ======= Componente ====== */
+// Interface para tipar o retorno do backend
+interface ApiPhoto {
+  _id: string;
+  imageUrl: string;
+  hashtags?: string[];
+  user?: {
+    _id: string;
+    name: string;
+    lastName: string;
+    socialMedia?: { platform: string; username: string; isPrincipal?: boolean }[];
+  };
+}
+
 export default function Carousel() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [current, setCurrent] = useState(0);
@@ -85,58 +94,58 @@ export default function Carousel() {
   const loadPhotos = useCallback(async (isInitialLoad = false) => {
     const now = Date.now();
     const COOLDOWN_MS = 60000; // 60 segundos
-    if (!isInitialLoad && now - lastFetchTimeRef.current < COOLDOWN_MS) {
-      return;
-    }
+    if (!isInitialLoad && now - lastFetchTimeRef.current < COOLDOWN_MS) return;
     
     try {
-      const response = await api.get('/fotos?limit=20');
+      const response = await api.get<{ docs: ApiPhoto[] }>('/fotos?limit=20');
       const photosFromApi = response.data.docs;
 
-      const adaptedPhotos: Photo[] = photosFromApi.map((item: any) => ({
+      const adaptedPhotos: Photo[] = photosFromApi.map((item) => ({
         id: item._id,
         src: item.imageUrl,
+        user: item.user ? {
+          id: item.user._id,
+          name: item.user.name,
+          lastName: item.user.lastName,
+          socialMedia: item.user.socialMedia?.map((sm): SocialMedia => ({
+            platform: sm.platform as "instagram" | "x" | "facebook",
+            url: sm.platform === "instagram" ? `https://instagram.com/${sm.username}` :
+                 sm.platform === "x" ? `https://x.com/${sm.username}` :
+                 sm.platform === "facebook" ? `https://facebook.com/${sm.username}` : sm.username,
+            isPrincipal: sm.isPrincipal,
+          })) || [],
+        } : undefined,
+        hashtags: item.hashtags || [],
       }));
-      
+
       lastFetchTimeRef.current = Date.now();
       sessionStorage.setItem('carouselPhotos', JSON.stringify(adaptedPhotos));
-      
       setPhotos((currentPhotos) => {
         const currentIds = new Set(currentPhotos.map(p => p.id));
         const newIds = new Set(adaptedPhotos.map(p => p.id));
-        if (currentIds.size === newIds.size && [...currentIds].every(id => newIds.has(id))) {
-          return currentPhotos;
-        }
+        if (currentIds.size === newIds.size && [...currentIds].every(id => newIds.has(id))) return currentPhotos;
         rotationsRef.current = adaptedPhotos.map(() => Math.random() * 12 - 6);
         return adaptedPhotos;
       });
-
     } catch (error) {
       console.error("Erro ao carregar fotos para o carrossel:", error);
-      if (isInitialLoad) {
-        toast.error("Não foi possível carregar as fotos da galeria.");
-      }
+      if (isInitialLoad) toast.error("Não foi possível carregar as fotos da galeria.");
     }
   }, []);
 
   useEffect(() => {
     const cachedPhotos = sessionStorage.getItem('carouselPhotos');
     if (cachedPhotos) {
-      const parsedPhotos = JSON.parse(cachedPhotos);
+      const parsedPhotos: Photo[] = JSON.parse(cachedPhotos);
       setPhotos(parsedPhotos);
       rotationsRef.current = parsedPhotos.map(() => Math.random() * 12 - 6);
     }
     loadPhotos(true);
-
     const POLLING_INTERVAL_MS = 120000; // 2 minutos
-    const intervalId = setInterval(() => {
-      loadPhotos(false);
-    }, POLLING_INTERVAL_MS);
-
+    const intervalId = setInterval(() => { loadPhotos(false); }, POLLING_INTERVAL_MS);
     return () => clearInterval(intervalId);
   }, [loadPhotos]);
 
-  // EFEITO ATUALIZADO: A notificação foi removida
   useEffect(() => {
     if (prevCurrentRef.current === photos.length - 1 && current === 0 && photos.length > 1) {
       loadPhotos(false);
@@ -147,7 +156,6 @@ export default function Carousel() {
   useEffect(() => {
     if (!photos.length) return;
     const INTERVAL_MS = mode === "mobile" ? 4500 : 4000;
-
     function start() {
       stop();
       autoplayRef.current = window.setInterval(() => {
@@ -158,16 +166,13 @@ export default function Carousel() {
         }
       }, INTERVAL_MS);
     }
-
     function stop() {
       if (autoplayRef.current !== null) {
         clearInterval(autoplayRef.current);
         autoplayRef.current = null;
       }
     }
-
     function onVisibilityChange() { if (document.hidden) stop(); else start(); }
-
     start();
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => { stop(); document.removeEventListener("visibilitychange", onVisibilityChange); };
@@ -253,30 +258,32 @@ export default function Carousel() {
         aria-live="polite"
       >
         <Controlls mode={mode} onPrev={prev} onNext={next} anchorPx={anchorPx} />
-
         <div
           id="carousel-slides"
           className="absolute top-0 bottom-0 flex items-center justify-center"
           style={{ left: gutter + 12, right: gutter + 12 }}
         >
-          {slides.map((s) => (
-            <Slide
-              key={s.photo.id}
-              photo={s.photo}
-              rotation={s.rotation}
-              offsetPx={s.tx}
-              size={s.size}
-              z={s.z}
-              scale={s.scale}
-              blur={s.blur}
-              opacity={s.opacity}
-              isCenter={s.idx === current}
-              fitMode={mode === "mobile" ? "contain-mobile-large" : "cover"}
-            />
-          ))}
+          {slides.map((s) => {
+            const fitMode: "cover" | "contain" = mode === "mobile" ? "contain" : "cover";
+            return (
+              <Slide
+                key={s.photo.id}
+                photo={s.photo}
+                rotation={s.rotation}
+                offsetPx={s.tx}
+                size={s.size}
+                z={s.z}
+                scale={s.scale}
+                blur={s.blur}
+                opacity={s.opacity}
+                isCenter={s.idx === current}
+                fitMode={fitMode}
+                activeTab="all"
+              />
+            );
+          })}
         </div>
       </div>
-
       <div className={`flex gap-2 ${mode === "mobile" ? "mt-1 mb-1" : "mt-6 mb-6"}`}>
         {photos.map((_, idx) => (
           <button

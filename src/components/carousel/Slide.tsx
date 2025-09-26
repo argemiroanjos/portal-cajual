@@ -1,14 +1,16 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
-import type { Photo } from "@/components/gallery/interfaces";
+import type { Photo } from "../gallery/interfaces";
+import { Instagram } from "lucide-react";
 
 type SizeName = "large" | "medium" | "small";
 
 const SIZES: Record<SizeName, { outerW: number; outerH: number; imgH: number; lateralPad: number }> = {
-  large:  { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
+  large: { outerW: 420, outerH: 520, imgH: 392, lateralPad: 14 },
   medium: { outerW: 320, outerH: 420, imgH: 292, lateralPad: 10 },
-  small:  { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8 },
+  small: { outerW: 240, outerH: 300, imgH: 180, lateralPad: 8 },
 };
 
 interface SlideProps {
@@ -21,9 +23,9 @@ interface SlideProps {
   blur: number;
   opacity: number;
   isCenter: boolean;
+  fitMode?: "contain" | "cover";
   onClick?: () => void;
-  userName?: string;
-  hashtags?: string[];
+  activeTab?: "all" | "user";
 }
 
 export default function Slide({
@@ -36,22 +38,33 @@ export default function Slide({
   blur,
   opacity,
   isCenter,
+  fitMode = "contain",
   onClick,
-  userName = "Usuário",
-  hashtags = ["#Cajual2025", "#Festival"],
+  activeTab = "user",
 }: SlideProps) {
   const s = SIZES[size];
-
   const polaroidTopSpace = size === "large" ? 18 : size === "medium" ? 12 : 8;
-
-  const baseBottomPad = size === "large"  ? 36 :
-                        size === "medium" ? 32 :
-                                            28;
+  const baseBottomPad = size === "large" ? 36 : size === "medium" ? 32 : 28;
   const bottomPad = Math.round(baseBottomPad * 1.3);
-
   const imgBoxH = s.outerH - polaroidTopSpace - bottomPad - 8;
 
-  const objectFit: "cover" | "contain" = "contain";
+  const userName = photo?.user ? `${photo.user.name} ${photo.user.lastName}`.trim() : "Usuário";
+
+  const mainSocial = photo.user?.socialMedia?.find((s) => s.isPrincipal) || photo.user?.socialMedia?.[0];
+
+  // Construir URL Instagram a partir da url
+  const instagramUrl =
+    mainSocial && mainSocial.platform === "instagram" && mainSocial.url
+      ? mainSocial.url.startsWith("http")
+        ? mainSocial.url
+        : `https://instagram.com/${mainSocial.url.replace(/^@/, "")}`
+      : "";
+
+  const hasValidInstagramUrl = instagramUrl !== "";
+
+  const hashtags = Array.isArray(photo.hashtags)
+    ? photo.hashtags.slice(0, 2).map((tag) => tag.trim()).join(" ")
+    : "";
 
   return (
     <div
@@ -63,7 +76,7 @@ export default function Slide({
         maxWidth: "96vw",
         height: `${s.outerH}px`,
         maxHeight: "72vh",
-        transform: `translate(-50%, -50%) translateX(${offsetPx}px) scale(${scale}) rotate(${rotation}deg)`,
+        transform: `translate(-50%, -50%) translateX(${offsetPx}px) rotate(${rotation}deg) scale(${scale})`,
         zIndex: z,
         opacity,
         filter: blur ? `blur(${blur}px)` : "none",
@@ -71,35 +84,43 @@ export default function Slide({
       onClick={onClick}
     >
       <div
-        className={`
-          bg-slate-50 rounded-lg overflow-hidden flex flex-col h-full w-full
-          border-4 border-[#001f54]
-          shadow-[-8px_8px_0px_0px_#001f54]
-          transform transition-transform
-          -rotate-1
-          hover:rotate-0 hover:shadow-[-2px_2px_0px_0px_#001f54]
-          active:rotate-0 active:shadow-[-2px_2px_0px_0px_#001f54] active:scale-95
-        `}
+        className="bg-slate-50 rounded-lg overflow-hidden flex flex-col h-full w-full border-4 border-[#001f54] shadow-[-8px_8px_0_0_#001f54] transition-transform -rotate-1 hover:rotate-0 hover:shadow-[-2px_2px_0_0_#001f54] active:rotate-0 active:shadow-[-2px_2px_0_0_#001f54] active:scale-95"
       >
         <div style={{ height: polaroidTopSpace, background: "#fff" }} />
-
         <div
-          className="relative flex items-center justify-center bg-white"
-          style={{ height: imgBoxH, paddingLeft: s.lateralPad, paddingRight: s.lateralPad }}
+          className="relative flex items-center justify-center"
+          style={{
+            height: imgBoxH,
+            paddingLeft: s.lateralPad,
+            paddingRight: s.lateralPad,
+            width: "100%",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#f3f4f6",
+            borderTopLeftRadius: 6,
+            borderTopRightRadius: 6,
+          }}
         >
           <Image
             src={photo.src}
             alt={`Foto ${photo.id}`}
             width={s.outerW}
             height={imgBoxH}
-            className="w-full h-full"
-            style={{ objectFit }}
+            className="object-contain"
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain",
+              borderTopLeftRadius: 6,
+              borderTopRightRadius: 6,
+            }}
             priority={isCenter}
             loading={isCenter ? "eager" : "lazy"}
             decoding="sync"
           />
         </div>
-
         <div
           style={{
             height: bottomPad,
@@ -111,12 +132,26 @@ export default function Slide({
             padding: "0 4px",
           }}
         >
-          <span className="text-sm font-semibold text-slate-900">{userName}</span>
-          <div className="flex gap-2">
-            {hashtags.map((tag, idx) => (
-              <span key={idx} className="text-xs font-medium text-slate-600">{tag}</span>
-            ))}
-          </div>
+          <span className="text-sm font-semibold text-slate-900 text-center flex items-center gap-1">
+            {activeTab === "all" && hasValidInstagramUrl ? (
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 text-blue-800 hover:text-yellow-500 transition-colors"
+                tabIndex={0}
+              >
+                <Instagram size={16} />
+                <span>{userName}</span>
+              </a>
+            ) : (
+              <span>{userName}</span>
+            )}
+          </span>
+          {hashtags && (
+            <span className="text-xs font-medium text-slate-700 mt-1">{hashtags}</span>
+          )}
         </div>
       </div>
     </div>

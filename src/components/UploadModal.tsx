@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
-import { X, UploadCloud, Image as ImageIcon, CornerUpLeft } from "lucide-react";
+import { X, UploadCloud, CornerUpLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 import Button from "@/components/Button";
@@ -14,18 +14,23 @@ type UploadModalProps = {
   onUploadSuccess?: () => void;
 };
 
-export const UploadModal: React.FC<UploadModalProps> = (props) => {
-  const { isOpen, onClose, onUploadSuccess } = props;
-  
+export const UploadModal: React.FC<UploadModalProps> = ({
+  isOpen,
+  onClose,
+  onUploadSuccess,
+}) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [hashtags, setHashtags] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [previewTags, setPreviewTags] = useState<string[]>([]);
+  const MAX_HASHTAGS = 2;
 
   const handleClose = useCallback(() => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setHashtags("");
+    setPreviewTags([]);
     setIsLoading(false);
     onClose();
   }, [onClose]);
@@ -37,15 +42,33 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
     }
     const objectUrl = URL.createObjectURL(selectedFile);
     setPreviewUrl(objectUrl);
-
     return () => URL.revokeObjectURL(objectUrl);
   }, [selectedFile]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    if (file) setSelectedFile(file);
+  };
+
+  // Atualiza previewTags em tempo real e limita a 2 hashtags
+  useEffect(() => {
+    const tags = hashtags
+      .split(/\s+/)
+      .map(tag => tag.trim().replace(/^#/, ""))
+      .filter(Boolean)
+      .slice(0, MAX_HASHTAGS)
+      .map(tag => `#${tag}`);
+    setPreviewTags(tags);
+  }, [hashtags]);
+
+  const handleHashtagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const tags = value.split(/\s+/).filter(Boolean);
+    if (tags.length > MAX_HASHTAGS) {
+      toast.error(`Você só pode adicionar até ${MAX_HASHTAGS} hashtags.`);
+      return;
     }
+    setHashtags(value);
   };
 
   const handlePublish = async () => {
@@ -57,22 +80,35 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
     setIsLoading(true);
     const loadingToastId = toast.loading("Enviando sua foto...");
 
+    const hashtagsArray = previewTags;
+
     const formData = new FormData();
-    formData.append('image', selectedFile);
-    formData.append('hashtags', JSON.stringify(hashtags.split(',').map(h => h.trim())));
+    formData.append("image", selectedFile);
+    formData.append("hashtags", JSON.stringify(hashtagsArray));
 
     try {
       await api.post("/fotos", formData);
-
       toast.dismiss(loadingToastId);
       toast.success("Foto publicada com sucesso!");
-      
       onUploadSuccess?.();
       handleClose();
-
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.dismiss(loadingToastId);
-      const errorMessage = err.response?.data?.message || "Falha ao publicar a foto.";
+
+      let errorMessage = "Falha ao publicar a foto.";
+
+      // Type guard para erro do Axios
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          errorMessage = axiosErr.response.data.message;
+        } else if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -82,7 +118,7 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
   useEffect(() => {
     if (!isOpen) return;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && handleClose();
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "auto";
@@ -102,18 +138,21 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
         className="absolute inset-0 bg-blue-900/30 backdrop-blur-sm"
         onClick={handleClose}
       />
-
       <div
         className="relative z-10 w-full max-w-lg bg-slate-50 p-6 sm:p-8 rounded-2xl border-4 border-[#001f54] shadow-[-8px_8px_0px_0px_#001f54] transform -rotate-1"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-blue-800">Publicar Foto</h2>
-          <button onClick={handleClose} aria-label="Fechar" className="text-gray-500 hover:text-red-500 transition">
+          <button
+            onClick={handleClose}
+            aria-label="Fechar"
+            className="text-gray-500 hover:text-red-500 transition"
+          >
             <X size={24} />
           </button>
         </div>
-        
+
         {!selectedFile ? (
           <label
             htmlFor="fileInput"
@@ -122,7 +161,13 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
             <UploadCloud className="w-12 h-12 text-blue-500 group-hover:text-yellow-500 transition-colors" />
             <p className="mt-2 font-semibold text-gray-700">Clique para selecionar uma foto</p>
             <p className="text-sm text-gray-500">Ou arraste e solte o arquivo aqui</p>
-            <input id="fileInput" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+            <input
+              id="fileInput"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
           </label>
         ) : (
           <div className="space-y-4">
@@ -131,18 +176,29 @@ export const UploadModal: React.FC<UploadModalProps> = (props) => {
                 <Image src={previewUrl} alt="Pré-visualização da imagem" layout="fill" objectFit="contain" />
               </div>
             )}
+
             <div>
-              <label className="block text-gray-700 font-medium mb-1" htmlFor="hashtags">
+              <label htmlFor="hashtags" className="block text-gray-700 font-medium mb-1">
                 Hashtags
               </label>
               <input
                 id="hashtags"
                 type="text"
                 value={hashtags}
-                onChange={(e) => setHashtags(e.target.value)}
-                placeholder="#cajual2025, #terrasanta"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                onChange={handleHashtagsChange}
+                placeholder="#cajual2025 #terrasanta"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-[#001f54]"
               />
+
+              {previewTags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {previewTags.map(tag => (
+                    <span key={tag} className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between items-center gap-4">
