@@ -32,6 +32,7 @@ export default function RegistroPage() {
     
     setIsLoading(true);
     const loadingToastId = toast.loading("Criando sua conta...");
+    console.log(loadingToastId)
 
     try {
       await api.post("/usuario/registro", {

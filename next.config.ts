@@ -10,7 +10,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cajual-app.azurewebsites.net",
+        hostname: "cajual-app-a3bpcmajf2g6bzbn.brazilsouth-01.azurewebsites.net",
         port: "",
         pathname: "/arquivos/**",
       },
