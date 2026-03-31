@@ -91,32 +91,6 @@ A aplicação estará disponível em **http://localhost:3000**.
 
 ---
 
-## 🔑 Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
-
-```env
-NEXTAUTH_SECRET=sua_secret_aqui
-NEXTAUTH_URL=http://localhost:3000
-```
-
----
-
-## 📁 Estrutura do Projeto
-
-```
-portal-cajual/
-├── public/          # Arquivos estáticos e assets
-├── src/             # Código-fonte da aplicação
-├── Dockerfile
-├── docker-compose.yml
-├── next.config.ts
-├── tailwind.config.ts
-└── package.json
-```
-
----
-
 ## 👨‍💻 Autores
 
 **Argemiro dos Anjos** — Desenvolvedor Fullstack
